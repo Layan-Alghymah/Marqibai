@@ -21,7 +21,6 @@ export async function GET() {
     list = startups || [];
   }
 
-  const list = startups || [];
   const ids = list.map((s: { id: string }) => s.id);
 
   const { data: plans } = ids.length
