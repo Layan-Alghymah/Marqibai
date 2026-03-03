@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الاستشارات — مرقب AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#16173D;--navy2:#132154;--purple:#9C6599;--bg:#f0eef8;--card-bg:#ffffff;--text:#16173D;--text-muted:#6b6b8a;--border:rgba(22,23,61,0.1);--shadow:0 2px 12px rgba(22,23,61,0.07);--input-bg:#f8f7fc;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;}
+[data-theme="dark"]{--bg:#080918;--card-bg:#10112a;--text:#e8e8f0;--text-muted:#8080a8;--border:rgba(255,255,255,0.07);--input-bg:rgba(255,255,255,0.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:all 0.3s;}
+.topbar{background:var(--card-bg);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 1px 8px rgba(22,23,61,0.05);}
+.topbar img{height:36px;}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.nav-btn{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.nav-btn:hover{background:var(--navy2);color:white;border-color:var(--navy2);}
+.container{max-width:820px;margin:0 auto;padding:32px 20px;}
+.nav-tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--card-bg);padding:6px;border-radius:12px;border:1px solid var(--border);}
+.nav-tab{flex:1;padding:9px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.nav-tab.active{background:var(--navy2);color:white;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:24px;font-weight:900;margin-bottom:4px;}
+.page-sub{color:var(--text-muted);font-size:14px;}
+.btn-new{padding:11px 22px;border-radius:10px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 12px rgba(156,101,153,0.3);}
+.btn-new:hover{transform:translateY(-1px);}
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.stat-mini{background:var(--card-bg);border-radius:12px;border:1px solid var(--border);padding:14px 16px;text-align:center;box-shadow:var(--shadow);}
+.stat-val{font-size:24px;font-weight:900;margin-bottom:3px;}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:600;}
+/* MODAL OVERLAY */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card-bg);border-radius:18px;padding:28px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-size:18px;font-weight:800;}
+.modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:13px;font-weight:600;margin-bottom:8px;display:block;}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;transition:all 0.2s;outline:none;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(156,101,153,0.1);}
+.form-textarea{resize:vertical;min-height:80px;}
+/* FIELD TYPE GRID */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.field-opt input{display:none;}
+.field-opt label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;font-size:13px;font-weight:600;text-align:center;transition:all 0.2s;}
+.field-opt label span.fi{font-size:22px;}
+.field-opt input:checked+label{border-color:var(--navy2);background:rgba(19,33,84,0.07);color:var(--navy2);}
+/* PRIORITY */
+.priority-row{display:flex;gap:8px;}
+.prio-opt input{display:none;}
+.prio-opt label{flex:1;padding:9px;border-radius:9px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;font-size:13px;font-weight:600;text-align:center;display:block;transition:all 0.2s;}
+.prio-opt input:checked+label{border-color:var(--navy2);background:var(--navy2);color:white;}
+/* WARNING */
+.legal-warning{display:none;padding:10px 14px;border-radius:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:var(--yellow);font-size:12px;margin-top:8px;}
+/* SUBMIT */
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-submit-modal{flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.btn-cancel{padding:12px 20px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:14px;cursor:pointer;}
+/* CONSULTATION CARDS */
+.consult-section-title{font-size:14px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:8px;}
+.consult-card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);padding:18px 20px;margin-bottom:12px;box-shadow:var(--shadow);transition:all 0.2s;cursor:default;}
+.consult-card:hover{box-shadow:0 4px 20px rgba(22,23,61,0.1);}
+.consult-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.consult-type-icon{width:42px;height:42px;border-radius:10px;background:rgba(156,101,153,0.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.consult-info{flex:1;}
+.consult-type{font-size:15px;font-weight:700;margin-bottom:3px;}
+.consult-desc{font-size:13px;color:var(--text-muted);line-height:1.5;}
+.status-chip{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap;}
+.s-open{background:rgba(245,158,11,0.12);color:var(--yellow);}
+.s-scheduled{background:rgba(156,101,153,0.12);color:var(--purple);}
+.s-done{background:rgba(34,197,94,0.1);color:var(--green);}
+.s-absent{background:rgba(239,68,68,0.1);color:var(--red);}
+.s-cancelled{background:rgba(100,100,120,0.1);color:var(--text-muted);}
+.consult-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);}
+.consult-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.action-chip{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.action-chip:hover{border-color:var(--navy2);color:var(--navy2);}
+.action-chip.green:hover{border-color:var(--green);color:var(--green);}
+.action-chip.red:hover{border-color:var(--red);color:var(--red);}
+/* FEEDBACK */
+.feedback-stars{display:flex;gap:6px;margin-top:8px;}
+.star-btn{font-size:22px;cursor:pointer;opacity:0.3;transition:all 0.15s;background:none;border:none;}
+.star-btn.on{opacity:1;}
+.empty-state{text-align:center;padding:48px;color:var(--text-muted);}
+.empty-state .ei{font-size:48px;margin-bottom:12px;}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.field-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a href="founder-home.html"><img id="topLogo" src="light_logo.png" alt="مرقب AI"></a>
+  <div class="topbar-right">
+    <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+    <a href="founder-home.html" class="nav-btn">🏠 لوحتي</a>
+    <a href="founder-weekly-update.html" class="nav-btn">📋 أسبوعي</a>
+    <a href="founder-startup-profile.html" class="nav-btn">📄 ملف المشروع</a>
+    <a href="founder-monthly-report.html" class="nav-btn">📊 شهري</a>
+    <a href="founder-consultations.html" class="nav-btn" style="background:var(--navy2);color:white;border-color:var(--navy2)">🤝 استشارات</a>
+    <a href="founder-history.html" class="nav-btn">🕐 السجل</a>
+    <a href="login.html" class="nav-btn">خروج</a>
+  </div>
+</div>
+
+<!-- NEW CONSULT MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">طلب استشارة جديد</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">مجال الاستشارة</label>
+      <div class="field-grid">
+        <div class="field-opt"><input type="radio" name="field" id="f1" value="تسويق"><label for="f1"><span class="fi">📢</span>تسويق</label></div>
+        <div class="field-opt"><input type="radio" name="field" id="f2" value="مالية"><label for="f2"><span class="fi">💰</span>مالية</label></div>
+        <div class="field-opt"><input type="radio" name="field" id="f3" value="قانونية" onchange="checkLegal(this)"><label for="f3"><span class="fi">⚖️</span>قانونية</label></div>
+        <div class="field-opt"><input type="radio" name="field" id="f4" value="منتج"><label for="f4"><span class="fi">📦</span>منتج</label></div>
+        <div class="field-opt"><input type="radio" name="field" id="f5" value="تقنية"><label for="f5"><span class="fi">💻</span>تقنية</label></div>
+        <div class="field-opt"><input type="radio" name="field" id="f6" value="استثمار"><label for="f6"><span class="fi">💼</span>استثمار / Pitch</label></div>
+      </div>
+      <div class="legal-warning" id="legalWarn">⚠️ ملاحظة: الاستشارات القانونية إرشادية فقط ولا تُعدّ رأيًا قانونيًا رسميًا.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">وصف الاحتياج</label>
+      <textarea class="form-textarea" id="consultDesc" placeholder="اشرح ما تحتاجه بالتفصيل... كلما كان الوصف أوضح، كانت الاستشارة أفيد."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">مستوى الأولوية</label>
+      <div class="priority-row">
+        <div class="prio-opt"><input type="radio" name="prio" id="p1" value="عادي" checked><label for="p1">عادي</label></div>
+        <div class="prio-opt"><input type="radio" name="prio" id="p2" value="مهم"><label for="p2">مهم</label></div>
+        <div class="prio-opt"><input type="radio" name="prio" id="p3" value="عاجل"><label for="p3">⚡ عاجل</label></div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">مرفقات <span style="font-size:11px;color:var(--text-muted)">(اختياري)</span></label>
+      <input type="text" class="form-input" placeholder="رابط ملف أو وصف المرفق">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-submit-modal" onclick="submitConsult()">إرسال الطلب</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="location.href='founder-home.html'">🏠 لوحتي</button>
+    <button class="nav-tab" onclick="location.href='founder-weekly-update.html'">📋 أسبوعي</button>
+    <button class="nav-tab" onclick="location.href='founder-startup-profile.html'">📄 ملف المشروع</button>
+    <button class="nav-tab" onclick="location.href='founder-monthly-report.html'">📊 شهري</button>
+    <button class="nav-tab active">🤝 استشارات</button>
+    <button class="nav-tab" onclick="location.href='founder-history.html'">🕐 السجل</button>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">🤝 الاستشارات</div>
+      <div class="page-sub">طلب دعم متخصص من مستشاري الحاضنة</div>
+    </div>
+    <button class="btn-new" onclick="openModal()">+ طلب استشارة</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- LISTS -->
+  <div id="consultLists"></div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#132154;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;transition:transform 0.3s;box-shadow:0 8px 24px rgba(19,33,84,0.4);font-family:Cairo,sans-serif"></div>
+
+<script>
+const FIELD_ICONS = {تسويق:'📢',مالية:'💰',قانونية:'⚖️',منتج:'📦',تقنية:'💻',استثمار:'💼'};
+const STATUS_LABELS = {open:'مفتوح',scheduled:'مجدولة',done:'مكتملة',absent:'تغيّب',cancelled:'ملغي'};
+const STATUS_CLASS  = {open:'s-open',scheduled:'s-scheduled',done:'s-done',absent:'s-absent',cancelled:'s-cancelled'};
+
+let consultations = [
+  {id:1, field:'استثمار', desc:'نحتاج مساعدة في إعداد Pitch Deck لجولة Pre-seed — لدينا اجتماع مع صندوق بعد شهر', priority:'عاجل', status:'scheduled', date:'٢٠ يناير ٢٠٢٥', scheduledDate:'٢٥ يناير ٢٠٢٥', feedback:null},
+  {id:2, field:'تسويق',  desc:'كيف نبني استراتيجية محتوى فعّالة بميزانية محدودة للوصول لأصحاب المنشآت الصغيرة؟', priority:'عادي', status:'done', date:'١٥ يناير ٢٠٢٥', scheduledDate:'١٨ يناير ٢٠٢٥', feedback:4},
+  {id:3, field:'مالية',  desc:'نريد مراجعة نموذج التسعير الحالي — لدينا شعور أننا نسعّر بأقل من قيمتنا', priority:'مهم', status:'open', date:'٢٢ يناير ٢٠٢٥', scheduledDate:null, feedback:null},
+  {id:4, field:'قانونية', desc:'هل نحتاج لتسجيل اتفاقية NDA مع شركائنا؟ وكيف نحمي ملكيتنا الفكرية؟', priority:'عادي', status:'absent', date:'٨ يناير ٢٠٢٥', scheduledDate:'١٠ يناير ٢٠٢٥', feedback:null},
+  {id:5, field:'منتج',   desc:'نحتاج مراجعة لخريطة طريق المنتج — هل نركز على الميزات أم استقرار المنصة؟', priority:'عادي', status:'done', date:'٢ يناير ٢٠٢٥', scheduledDate:'٥ يناير ٢٠٢٥', feedback:5},
+];
+let nextId = 6;
+
+function renderStats(){
+  const total=consultations.length;
+  const open=consultations.filter(c=>c.status==='open').length;
+  const done=consultations.filter(c=>c.status==='done').length;
+  const absent=consultations.filter(c=>c.status==='absent').length;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-mini"><div class="stat-val">${total}</div><div class="stat-label">إجمالي الطلبات</div></div>
+    <div class="stat-mini"><div class="stat-val" style="color:var(--yellow)">${open}</div><div class="stat-label">مفتوح / قيد المعالجة</div></div>
+    <div class="stat-mini"><div class="stat-val" style="color:var(--green)">${done}</div><div class="stat-label">مكتمل</div></div>
+    <div class="stat-mini"><div class="stat-val" style="color:var(--red)">${absent}</div><div class="stat-label">تغيّب</div></div>
+  `;
+}
+
+function renderLists(){
+  const active=consultations.filter(c=>['open','scheduled'].includes(c.status));
+  const done=consultations.filter(c=>c.status==='done');
+  const other=consultations.filter(c=>['absent','cancelled'].includes(c.status));
+
+  let html='';
+  if(active.length){
+    html+=`<div class="consult-section-title">⏳ نشطة / قيد المعالجة <span style="background:rgba(245,158,11,0.12);color:var(--yellow);padding:2px 8px;border-radius:100px;font-size:11px">${active.length}</span></div>`;
+    html+=active.map(c=>renderCard(c)).join('');
+  }
+  if(done.length){
+    html+=`<div class="consult-section-title" style="margin-top:20px">✅ مكتملة <span style="background:rgba(34,197,94,0.1);color:var(--green);padding:2px 8px;border-radius:100px;font-size:11px">${done.length}</span></div>`;
+    html+=done.map(c=>renderCard(c)).join('');
+  }
+  if(other.length){
+    html+=`<div class="consult-section-title" style="margin-top:20px">📁 أرشيف</div>`;
+    html+=other.map(c=>renderCard(c)).join('');
+  }
+  if(!consultations.length){
+    html=`<div class="empty-state"><div class="ei">🤝</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">لا توجد طلبات استشارة بعد</div><div style="font-size:13px">اضغط "طلب استشارة" للبدء</div></div>`;
+  }
+  document.getElementById('consultLists').innerHTML=html;
+}
+
+function renderCard(c){
+  const stars = c.status==='done' && c.feedback!==null
+    ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">تقييمك للاستشارة</div>
+        <div class="feedback-stars">${[1,2,3,4,5].map(i=>`<button class="star-btn${i<=c.feedback?' on':''}" onclick="rateFeedback(${c.id},${i})">${i<=c.feedback?'★':'☆'}</button>`).join('')}</div>
+       </div>` : '';
+  const actions = c.status==='done'||c.status==='absent'||c.status==='cancelled' ? '' : `
+    <div class="consult-actions">
+      ${c.status==='open'?`<button class="action-chip" onclick="updateStatus(${c.id},'cancelled')">إلغاء الطلب</button>`:''}
+      ${c.status==='scheduled'?`
+        <button class="action-chip green" onclick="updateStatus(${c.id},'done')">✅ حضرت</button>
+        <button class="action-chip red" onclick="updateStatus(${c.id},'absent')">❌ تغيّبت</button>
+      `:''}
+    </div>`;
+  const prioColor=c.priority==='عاجل'?'var(--red)':c.priority==='مهم'?'var(--yellow)':'var(--text-muted)';
+  return `
+    <div class="consult-card">
+      <div class="consult-card-header">
+        <div class="consult-type-icon">${FIELD_ICONS[c.field]||'🤝'}</div>
+        <div class="consult-info">
+          <div class="consult-type">${c.field}</div>
+          <div class="consult-desc">${c.desc}</div>
+        </div>
+        <span class="status-chip ${STATUS_CLASS[c.status]}">${STATUS_LABELS[c.status]}</span>
+      </div>
+      <div class="consult-meta">
+        <span>📅 ${c.date}</span>
+        ${c.scheduledDate?`<span>🗓️ الموعد: ${c.scheduledDate}</span>`:''}
+        <span style="color:${prioColor};font-weight:700">${c.priority==='عاجل'?'⚡ ':c.priority==='مهم'?'🔺 ':''}${c.priority}</span>
+      </div>
+      ${stars}
+      ${actions}
+    </div>`;
+}
+
+function updateStatus(id,status){
+  const c=consultations.find(c=>c.id===id);
+  if(!c) return;
+  c.status=status;
+  if(status==='done') c.feedback=0;
+  renderStats(); renderLists();
+  const msgs={done:'✅ تم تسجيل حضورك',absent:'تم تسجيل الغياب',cancelled:'تم إلغاء الطلب'};
+  showToast(msgs[status]||'تم التحديث');
+
+  fetch(`/api/consultations/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({status})}).catch(()=>{});
+}
+
+function rateFeedback(id,stars){
+  const c=consultations.find(c=>c.id===id);
+  if(c) c.feedback=stars;
+  renderLists();
+  showToast('شكرًا على تقييمك ⭐');
+}
+
+function openModal(){ document.getElementById('modalOverlay').classList.add('open'); }
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+function checkLegal(el){ document.getElementById('legalWarn').style.display=el.checked?'block':'none'; }
+
+async function submitConsult(){
+  const field=[...document.querySelectorAll('input[name="field"]')].find(r=>r.checked)?.value;
+  const desc=document.getElementById('consultDesc').value.trim();
+  const prio=[...document.querySelectorAll('input[name="prio"]')].find(r=>r.checked)?.value||'عادي';
+
+  if(!field){showToast('⚠️ اختر مجال الاستشارة');return;}
+  if(!desc){showToast('⚠️ اكتب وصف الاحتياج');return;}
+
+  const newC={id:nextId++,field,desc,priority:prio,status:'open',date:new Date().toLocaleDateString('ar-SA'),scheduledDate:null,feedback:null};
+  
+  try{
+    const res=await fetch('/api/consultations',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(newC)});
+    if(res.ok){const d=await res.json();newC.id=d.id||newC.id;}
+  }catch(e){}
+
+  consultations.unshift(newC);
+  closeModal();
+  renderStats(); renderLists();
+  document.getElementById('consultDesc').value='';
+  document.querySelectorAll('input[name="field"]').forEach(r=>r.checked=false);
+  document.getElementById('legalWarn').style.display='none';
+  showToast('✅ تم إرسال طلب الاستشارة');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>t.style.transform='translateX(-50%) translateY(80px)',3000);
+}
+function toggleTheme(){
+  const d=document.body.dataset.theme==='dark';
+  document.body.dataset.theme=d?'light':'dark';
+  document.querySelector('.icon-btn').textContent=d?'🌙':'☀️';
+  document.getElementById('topLogo').src=d?'light_logo.png':'dark_logo.png';
+}
+
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeModal();});
+
+renderStats();
+renderLists();
+</script>
+</body>
+</html>

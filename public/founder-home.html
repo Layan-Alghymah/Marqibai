@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحتي — مرقب AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#16173D;--navy2:#132154;--purple:#9C6599;
+  --bg:#f0eef8;--card-bg:#ffffff;--text:#16173D;--text-muted:#6b6b8a;
+  --border:rgba(22,23,61,0.1);--shadow:0 2px 12px rgba(22,23,61,0.07);
+  --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;
+}
+[data-theme="dark"]{
+  --bg:#080918;--card-bg:#10112a;--text:#e8e8f0;--text-muted:#8080a8;
+  --border:rgba(255,255,255,0.07);--shadow:0 2px 12px rgba(0,0,0,0.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:all 0.3s;}
+
+/* TOPBAR */
+.topbar{
+  background:var(--card-bg);border-bottom:1px solid var(--border);
+  padding:0 28px;height:64px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:40;
+  box-shadow:0 1px 8px rgba(22,23,61,0.05);
+}
+.topbar-logo img{height:38px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.user-chip{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:100px;background:var(--bg);border:1px solid var(--border);}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#132154,#9C6599);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;}
+.user-name{font-size:13px;font-weight:600;}
+.logout-btn{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.logout-btn:hover{background:var(--red);color:white;border-color:var(--red);}
+
+/* LAYOUT */
+.container{max-width:960px;margin:0 auto;padding:32px 20px;}
+
+/* WELCOME HERO */
+.welcome-hero{
+  background:linear-gradient(135deg,#132154 0%,#16173D 55%,rgba(156,101,153,0.5) 100%);
+  border-radius:18px;padding:28px 32px;margin-bottom:24px;
+  color:white;display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+}
+.welcome-text h1{font-size:22px;font-weight:800;margin-bottom:6px;}
+.welcome-text p{font-size:14px;opacity:0.8;}
+.welcome-week{
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  padding:5px 14px;border-radius:100px;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+  font-size:12px;font-weight:700;
+}
+.health-orb{text-align:center;}
+.orb-circle{
+  width:88px;height:88px;border-radius:50%;
+  background:rgba(255,255,255,0.1);
+  border:3px solid rgba(255,255,255,0.2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0 auto 8px;
+}
+.orb-num{font-size:28px;font-weight:900;}
+.orb-label{font-size:10px;opacity:0.7;}
+.risk-pill{
+  padding:4px 14px;border-radius:100px;font-size:12px;font-weight:700;
+  display:inline-block;
+}
+.risk-high{background:rgba(239,68,68,0.3);color:#fca5a5;}
+.risk-medium{background:rgba(245,158,11,0.3);color:#fde68a;}
+.risk-low{background:rgba(34,197,94,0.3);color:#86efac;}
+
+/* STATUS ALERT */
+.status-alert{
+  border-radius:14px;padding:16px 20px;margin-bottom:20px;
+  display:flex;align-items:center;gap:14px;
+  border:1px solid;
+}
+.status-alert.sent{background:rgba(34,197,94,0.07);border-color:rgba(34,197,94,0.2);}
+.status-alert.pending{background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.25);}
+.status-alert.late{background:rgba(239,68,68,0.07);border-color:rgba(239,68,68,0.2);}
+.alert-icon{font-size:28px;flex-shrink:0;}
+.alert-body{flex:1;}
+.alert-title{font-size:14px;font-weight:700;margin-bottom:3px;}
+.alert-sub{font-size:13px;color:var(--text-muted);}
+.alert-action{
+  padding:9px 20px;border-radius:9px;border:none;
+  font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.action-green{background:var(--green);color:white;}
+.action-yellow{background:var(--yellow);color:white;}
+.action-navy{background:linear-gradient(135deg,#132154,#9C6599);color:white;box-shadow:0 3px 10px rgba(156,101,153,0.3);}
+.action-green:hover,.action-yellow:hover,.action-navy:hover{transform:translateY(-1px);}
+
+/* QUICK ACTIONS */
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.quick-card{
+  background:var(--card-bg);border-radius:14px;border:1px solid var(--border);
+  padding:20px;text-align:center;cursor:pointer;text-decoration:none;color:var(--text);
+  transition:all 0.25s;box-shadow:var(--shadow);display:flex;flex-direction:column;
+  align-items:center;gap:8px;
+}
+.quick-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(22,23,61,0.12);border-color:var(--purple);}
+.quick-card.primary{background:linear-gradient(135deg,#132154,#9C6599);color:white;border:none;}
+.quick-card.primary:hover{box-shadow:0 8px 24px rgba(156,101,153,0.4);}
+.quick-icon{font-size:28px;}
+.quick-label{font-size:14px;font-weight:700;}
+.quick-sub{font-size:11px;color:var(--text-muted);}
+.quick-card.primary .quick-sub{color:rgba(255,255,255,0.7);}
+.quick-badge{
+  padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;
+  background:var(--red);color:white;
+}
+
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;}
+
+/* CARDS */
+.card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.view-all{font-size:12px;color:var(--purple);text-decoration:none;font-weight:600;}
+.view-all:hover{text-decoration:underline;}
+.badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;}
+.badge-gray{background:rgba(100,100,120,0.1);color:var(--text-muted);}
+.badge-yellow{background:rgba(245,158,11,0.12);color:var(--yellow);}
+.badge-green{background:rgba(34,197,94,0.1);color:var(--green);}
+
+/* MINI STATS */
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);}
+.mini-stat{padding:16px 20px;border-left:1px solid var(--border);text-align:center;}
+.mini-stat:last-child{border-left:none;}
+.ms-val{font-size:22px;font-weight:900;}
+.ms-label{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+/* CHART */
+.chart-wrap{padding:16px 20px;}
+
+/* HISTORY ROWS */
+.hist-row{
+  padding:12px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.15s;
+}
+.hist-row:hover{background:rgba(156,101,153,0.03);}
+.hist-row:last-child{border-bottom:none;}
+.hist-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.hist-info{flex:1;}
+.hist-week{font-size:13px;font-weight:600;}
+.hist-date{font-size:11px;color:var(--text-muted);}
+.hist-score{font-size:15px;font-weight:900;}
+
+/* SIDE CARDS */
+.consult-item{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.consult-item:last-child{border-bottom:none;}
+.ci-icon{width:36px;height:36px;border-radius:9px;background:rgba(156,101,153,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ci-type{font-size:13px;font-weight:700;}
+.ci-date{font-size:11px;color:var(--text-muted);}
+.ci-status{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;margin-right:auto;white-space:nowrap;}
+.s-open{background:rgba(245,158,11,0.1);color:var(--yellow);}
+.s-scheduled{background:rgba(156,101,153,0.12);color:var(--purple);}
+.s-done{background:rgba(34,197,94,0.1);color:var(--green);}
+
+/* MONTHLY NUDGE */
+.monthly-nudge{
+  margin:20px 0;border-radius:14px;padding:18px 20px;
+  background:rgba(19,33,84,0.04);border:1px dashed rgba(19,33,84,0.2);
+  display:flex;align-items:center;gap:14px;
+}
+[data-theme="dark"] .monthly-nudge{background:rgba(156,101,153,0.06);border-color:rgba(156,101,153,0.2);}
+.nudge-icon{font-size:28px;}
+.nudge-text{flex:1;}
+.nudge-title{font-size:14px;font-weight:700;margin-bottom:3px;}
+.nudge-sub{font-size:12px;color:var(--text-muted);}
+
+/* C-BARS SIDE */
+.c-row{padding:10px 20px;border-bottom:1px solid var(--border);}
+.c-row:last-child{border-bottom:none;}
+.c-head{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px;}
+.c-bar{height:5px;border-radius:100px;background:var(--border);overflow:hidden;}
+.c-fill{height:100%;border-radius:100px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#132154;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;transition:transform 0.3s;box-shadow:0 8px 24px rgba(19,33,84,0.4);font-family:Cairo,sans-serif;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeInUp 0.4s ease both;}
+.anim-d1{animation-delay:0.05s}
+.anim-d2{animation-delay:0.1s}
+.anim-d3{animation-delay:0.15s}
+.anim-d4{animation-delay:0.2s}
+.anim-d5{animation-delay:0.25s}
+
+@media(max-width:768px){
+  .quick-grid{grid-template-columns:1fr 1fr;}
+  .main-grid{grid-template-columns:1fr;}
+  .welcome-hero{flex-direction:column;}
+  .topbar{padding:0 16px;}
+  .container{padding:20px 14px;}
+}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="topbar">
+  <div class="topbar-logo"><a href="founder-home.html"><img id="topLogo" src="light_logo.png" alt="مرقب AI"></a></div>
+  <div class="topbar-right">
+    <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+    <div class="user-chip">
+      <div class="user-avatar">س</div>
+      <span class="user-name">سدرة للاستشارات</span>
+    </div>
+    <a href="login.html" class="logout-btn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- WELCOME HERO -->
+  <div class="welcome-hero anim">
+    <div class="welcome-text">
+      <h1>أهلاً، <span id="founderName">سدرة للاستشارات</span> 👋</h1>
+      <p>هذا ملخص وضعك الأسبوعي في الحاضنة</p>
+      <div class="welcome-week" id="weekChip">📅 يتم التحميل...</div>
+    </div>
+    <div class="health-orb">
+      <div class="orb-circle">
+        <div class="orb-num" id="heroHealth">—</div>
+        <div class="orb-label">مؤشر الصحة</div>
+      </div>
+      <span class="risk-pill" id="heroRisk">—</span>
+    </div>
+  </div>
+
+  <!-- WEEKLY STATUS ALERT -->
+  <div id="weeklyAlert" class="anim anim-d1"></div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="quick-grid anim anim-d2">
+    <a href="founder-weekly-update.html" class="quick-card primary">
+      <div class="quick-icon">📋</div>
+      <div class="quick-label">تحديث أسبوعي</div>
+      <div class="quick-sub" id="weeklyBtnSub">إرسال تقرير هذا الأسبوع</div>
+    </a>
+    <a href="founder-startup-profile.html" class="quick-card">
+      <div class="quick-icon">📄</div>
+      <div class="quick-label">ملف المشروع وخطة التنفيذ</div>
+      <div class="quick-sub" id="startupProfileSub">المعلمات القادمة + التسليمات</div>
+    </a>
+    <a href="founder-monthly-report.html" class="quick-card">
+      <div class="quick-icon">📊</div>
+      <div class="quick-label">تقرير شهري</div>
+      <div class="quick-sub" id="monthlyBtnSub">يناير ٢٠٢٥</div>
+    </a>
+    <a href="founder-consultations.html" class="quick-card">
+      <div class="quick-icon">🤝</div>
+      <div class="quick-label">طلب استشارة</div>
+      <div class="quick-sub" id="consultBtnSub">لديك طلب مفتوح</div>
+    </a>
+  </div>
+  <!-- عرض في لوحتي: المعلم + عدد التسليمات -->
+  <div class="card anim anim-d2" id="startupPlanCard" style="margin-bottom:20px;display:none">
+    <div class="card-header">
+      <div class="card-title">📄 عرض في لوحتي — خطة التنفيذ</div>
+      <a href="founder-startup-profile.html" class="view-all">تعديل الملف</a>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:4px">المعلم القادم</div>
+        <div id="dashboardNextMilestone" style="font-size:14px;font-weight:700">—</div>
+        <div id="dashboardMilestoneDate" style="font-size:12px;color:var(--text-muted)">—</div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <span class="badge badge-gray" id="deliverablesPlanned">0 مخطط</span>
+        <span class="badge badge-yellow" id="deliverablesInProgress">0 قيد التنفيذ</span>
+        <span class="badge badge-green" id="deliverablesDone">0 منجزة</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY NUDGE (if report late) -->
+  <div class="monthly-nudge anim anim-d3" id="monthlyNudge" style="display:none">
+    <div class="nudge-icon">📊</div>
+    <div class="nudge-text">
+      <div class="nudge-title">التقرير الشهري لم يُرسَل بعد</div>
+      <div class="nudge-sub">آخر موعد: نهاية يناير — يؤثر على مؤشر الثقة الشهري</div>
+    </div>
+    <a href="founder-monthly-report.html" class="alert-action action-navy">إرسال الآن</a>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: Chart + History -->
+    <div>
+      <!-- CHART CARD -->
+      <div class="card anim anim-d3" style="margin-bottom:16px">
+        <div class="card-header">
+          <div class="card-title">📈 تطور مؤشر الصحة</div>
+          <a href="founder-history.html" class="view-all">عرض الكل</a>
+        </div>
+        <!-- Mini stats -->
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="ms-val" id="avgHealth">—</div>
+            <div class="ms-label">متوسط الصحة</div>
+          </div>
+          <div class="mini-stat">
+            <div class="ms-val" id="commitRate">—</div>
+            <div class="ms-label">معدل الالتزام</div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="miniChart" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- RECENT WEEKS -->
+      <div class="card anim anim-d4">
+        <div class="card-header">
+          <div class="card-title">🗓️ آخر الأسابيع</div>
+          <a href="founder-history.html" class="view-all">السجل الكامل</a>
+        </div>
+        <div id="recentWeeks"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: C-Scores + Consultations -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- C1-C4 BREAKDOWN -->
+      <div class="card anim anim-d3">
+        <div class="card-header">
+          <div class="card-title">⚡ محاور التقييم</div>
+          <span style="font-size:11px;color:var(--text-muted)">آخر أسبوع</span>
+        </div>
+        <div id="cBars"></div>
+      </div>
+
+      <!-- FLAGS -->
+      <div class="card anim anim-d4" id="flagsCard" style="display:none">
+        <div class="card-header">
+          <div class="card-title">⚠️ تنبيهات مرقب</div>
+        </div>
+        <div id="flagsList"></div>
+      </div>
+
+      <!-- CONSULTATIONS -->
+      <div class="card anim anim-d5">
+        <div class="card-header">
+          <div class="card-title">🤝 الاستشارات</div>
+          <a href="founder-consultations.html" class="view-all">إدارة</a>
+        </div>
+        <div id="consultsList"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ──────────────────────────────────────────
+   MOCK DATA — بيانات الشركة المؤسس
+   ────────────────────────────────────────── */
+const FOUNDER_DATA = {
+  name: "سدرة للاستشارات",
+  stage: "فكرة",
+  type: "خدمي",
+  incubator: "حاضنة مجمعة للابتكار",
+  health: 55,
+  risk: "medium",
+  c1: 60, c2: 50, c3: 55, c4: 55,
+  flags: ["نسبة الإنجاز أقل من 50%", "لا يوجد عملاء مؤكدون"],
+  recommendation: "جلسة إرشاد لتحديد نموذج العمل",
+  weeklySent: false,          // هل أرسل هذا الأسبوع؟
+  monthlyUpdated: true,       // هل أرسل التقرير الشهري؟
+  weeksSinceLastUpdate: 1,
+  history: [
+    { week: "أسبوع 1", date: "٤ ديسمبر",  health: 38, sent: true  },
+    { week: "أسبوع 2", date: "١١ ديسمبر", health: 42, sent: true  },
+    { week: "أسبوع 3", date: "١٨ ديسمبر", health: 45, sent: true  },
+    { week: "أسبوع 4", date: "٢٥ ديسمبر", health: 48, sent: false },
+    { week: "أسبوع 5", date: "١ يناير",   health: 52, sent: true  },
+    { week: "أسبوع 6", date: "٨ يناير",   health: 50, sent: true  },
+    { week: "أسبوع 7", date: "١٥ يناير",  health: 53, sent: true  },
+    { week: "أسبوع 8", date: "٢٢ يناير",  health: 55, sent: false },
+  ],
+  consultations: [
+    { type: "استشارة استثمارية", date: "٢٠ يناير", status: "scheduled" },
+    { type: "استشارة تسويقية",   date: "١٠ يناير", status: "done"      },
+    { type: "استشارة مالية",     date: "٢٢ يناير", status: "open"      },
+  ]
+};
+
+const d = FOUNDER_DATA;
+
+/* ─── WELCOME HERO ─────────────────────── */
+function renderHero() {
+  document.getElementById('founderName').textContent = d.name;
+  const now = new Date();
+  document.getElementById('weekChip').textContent =
+    `📅 الأسبوع ${getWeekNum(now)} — ${now.toLocaleDateString('ar-SA',{month:'long',year:'numeric'})}`;
+
+  const healthEl = document.getElementById('heroHealth');
+  const healthColor = d.health >= 70 ? '#86efac' : d.health >= 45 ? '#fde68a' : '#fca5a5';
+  healthEl.textContent = d.health;
+  healthEl.style.color = healthColor;
+
+  const riskEl = document.getElementById('heroRisk');
+  const riskLabel = d.risk==='high'?'خطر مرتفع':d.risk==='medium'?'خطر متوسط':'خطر منخفض';
+  const riskClass = d.risk==='high'?'risk-high':d.risk==='medium'?'risk-medium':'risk-low';
+  riskEl.textContent = riskLabel;
+  riskEl.className = `risk-pill ${riskClass}`;
+}
+
+/* ─── WEEKLY STATUS ALERT ───────────────── */
+function renderAlert() {
+  const el = document.getElementById('weeklyAlert');
+  if (d.weeklySent) {
+    el.className = 'status-alert sent anim anim-d1';
+    el.innerHTML = `
+      <div class="alert-icon">✅</div>
+      <div class="alert-body">
+        <div class="alert-title">أرسلت تحديث هذا الأسبوع</div>
+        <div class="alert-sub">مؤشر الصحة الحالي: <strong>${d.health}/100</strong> — ${d.recommendation}</div>
+      </div>
+      <a href="founder-history.html" class="alert-action action-green">عرض النتيجة</a>`;
+  } else if (d.weeksSinceLastUpdate <= 1) {
+    el.className = 'status-alert pending anim anim-d1';
+    el.innerHTML = `
+      <div class="alert-icon">⏰</div>
+      <div class="alert-body">
+        <div class="alert-title">لم ترسل تحديث هذا الأسبوع بعد</div>
+        <div class="alert-sub">أرسل تحديثك الأسبوعي الآن ليحسب في التقييم</div>
+      </div>
+      <a href="founder-weekly-update.html" class="alert-action action-yellow">إرسال الآن →</a>`;
+  } else {
+    el.className = 'status-alert late anim anim-d1';
+    el.innerHTML = `
+      <div class="alert-icon">🚨</div>
+      <div class="alert-body">
+        <div class="alert-title">تأخر في الإرسال — ${d.weeksSinceLastUpdate} أسبوع بدون تحديث</div>
+        <div class="alert-sub">الغياب المتكرر يؤثر على مؤشر الصحة وقد يؤدي لتصعيد</div>
+      </div>
+      <a href="founder-weekly-update.html" class="alert-action action-navy">إرسال الآن →</a>`;
+  }
+}
+
+/* ─── QUICK ACTIONS ─────────────────────── */
+function renderQuickActions() {
+  const weeklyBtn = document.querySelector('.quick-card.primary .quick-sub');
+  if (weeklyBtn) weeklyBtn.textContent = d.weeklySent ? '✅ تم الإرسال' : '⏰ لم يُرسَل بعد';
+
+  if (!d.monthlyUpdated) {
+    document.getElementById('monthlyNudge').style.display = 'flex';
+    const monthlyBtnEl = document.getElementById('monthlyBtnSub');
+    if (monthlyBtnEl) { monthlyBtnEl.textContent = '⚠️ لم يُرسَل بعد'; monthlyBtnEl.style.color='var(--red)'; }
+  }
+
+  const openConsults = d.consultations.filter(c=>['open','scheduled'].includes(c.status)).length;
+  const consultSub = document.getElementById('consultBtnSub');
+  if (consultSub) consultSub.textContent = openConsults > 0 ? `${openConsults} طلب نشط` : 'طلب استشارة جديد';
+}
+
+/* ─── STARTUP PROFILE CARD (من API) ─────── */
+async function loadStartupProfileCard() {
+  const card = document.getElementById('startupPlanCard');
+  const sub = document.getElementById('startupProfileSub');
+  try {
+    const res = await fetch('/api/startup/profile', { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.plan || (data.deliverables && data.deliverables.length)) card.style.display = 'block';
+    if (data.plan) {
+      document.getElementById('dashboardNextMilestone').textContent = data.plan.next_milestone_title || '—';
+      document.getElementById('dashboardMilestoneDate').textContent = data.plan.next_milestone_due_date ? new Date(data.plan.next_milestone_due_date).toLocaleDateString('ar-SA') : '—';
+    }
+    const dels = data.deliverables || [];
+    const planned = dels.filter(x => x.status === 'planned').length;
+    const inProgress = dels.filter(x => x.status === 'in_progress').length;
+    const done = dels.filter(x => x.status === 'done').length;
+    document.getElementById('deliverablesPlanned').textContent = planned + ' مخطط';
+    document.getElementById('deliverablesInProgress').textContent = inProgress + ' قيد التنفيذ';
+    document.getElementById('deliverablesDone').textContent = done + ' منجزة';
+    if (sub) sub.textContent = (data.plan && data.plan.next_milestone_title) ? 'المعلم: ' + data.plan.next_milestone_title : 'المعلمات + التسليمات';
+  } catch (e) {}
+}
+
+/* ─── MINI CHART ────────────────────────── */
+function renderChart() {
+  const ctx = document.getElementById('miniChart');
+  const labels = d.history.map(w => w.week);
+  const data   = d.history.map(w => w.health);
+  const colors = d.history.map(w => w.sent
+    ? (w.health>=70?'#22c55e':w.health>=45?'#f59e0b':'#ef4444')
+    : '#ef4444');
+
+  const chartCtx = ctx.getContext('2d');
+  const gradient = chartCtx.createLinearGradient(0,0,0,160);
+  gradient.addColorStop(0,'rgba(156,101,153,0.25)');
+  gradient.addColorStop(1,'rgba(156,101,153,0.02)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          data, fill: true,
+          borderColor: '#9C6599', backgroundColor: gradient,
+          borderWidth: 2.5, tension: 0.4,
+          pointBackgroundColor: colors,
+          pointBorderColor: 'white', pointBorderWidth: 2,
+          pointRadius: d.history.map(w=>w.sent?5:7),
+          pointStyle: d.history.map(w=>w.sent?'circle':'rectRot'),
+        },
+        { data: labels.map(()=>70), borderColor:'rgba(34,197,94,0.3)', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false },
+        { data: labels.map(()=>45), borderColor:'rgba(245,158,11,0.3)', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false },
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          label: ctx => ctx.datasetIndex===0 ? `الصحة: ${ctx.raw}` : null,
+          afterLabel: ctx => {
+            if(ctx.datasetIndex!==0) return null;
+            return d.history[ctx.dataIndex].sent ? '✅ أرسل' : '❌ لم يرسل';
+          }
+        }}
+      },
+      scales:{
+        y:{min:0,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{family:'Cairo'},stepSize:25}},
+        x:{grid:{display:false},ticks:{font:{family:'Cairo'},maxRotation:0}}
+      }
+    }
+  });
+
+  // Mini stats
+  const sentWeeks = d.history.filter(w=>w.sent);
+  const avg = Math.round(sentWeeks.reduce((s,w)=>s+w.health,0)/sentWeeks.length);
+  const commitPct = Math.round(sentWeeks.length/d.history.length*100);
+  document.getElementById('avgHealth').textContent = avg;
+  document.getElementById('avgHealth').style.color = avg>=70?'var(--green)':avg>=45?'var(--yellow)':'var(--red)';
+  document.getElementById('commitRate').textContent = commitPct+'%';
+  document.getElementById('commitRate').style.color = commitPct>=80?'var(--green)':commitPct>=60?'var(--yellow)':'var(--red)';
+}
+
+/* ─── RECENT WEEKS ──────────────────────── */
+function renderRecentWeeks() {
+  const recent = [...d.history].reverse().slice(0,5);
+  document.getElementById('recentWeeks').innerHTML = recent.map(w=>{
+    const hColor = w.health>=70?'var(--green)':w.health>=45?'var(--yellow)':'var(--red)';
+    return `
+      <a href="founder-history.html" class="hist-row" style="text-decoration:none;color:inherit">
+        <div class="hist-dot" style="background:${w.sent?hColor:'var(--red)'}"></div>
+        <div class="hist-info">
+          <div class="hist-week">${w.week}</div>
+          <div class="hist-date">${w.date} — ${w.sent?'✅ أرسل':'❌ لم يرسل'}</div>
+        </div>
+        <div class="hist-score" style="color:${w.sent?hColor:'var(--text-muted)'}">${w.sent?w.health:'—'}</div>
+      </a>`;
+  }).join('');
+}
+
+/* ─── C1-C4 BARS ────────────────────────── */
+function renderCBars() {
+  const axes = [
+    {k:'C1',label:'التقدم التشغيلي',v:d.c1,w:'30%'},
+    {k:'C2',label:'النمو السوقي',   v:d.c2,w:'25%'},
+    {k:'C3',label:'الاستقرار المالي',v:d.c3,w:'25%'},
+    {k:'C4',label:'الالتزام',       v:d.c4,w:'20%'},
+  ];
+  document.getElementById('cBars').innerHTML = axes.map(a=>{
+    const color = a.v>=70?'var(--green)':a.v>=45?'var(--yellow)':'var(--red)';
+    return `
+      <div class="c-row">
+        <div class="c-head">
+          <span>${a.k} — ${a.label} <span style="color:var(--text-muted);font-weight:400;font-size:10px">(${a.w})</span></span>
+          <span style="color:${color}">${a.v}/100</span>
+        </div>
+        <div class="c-bar">
+          <div class="c-fill" style="width:${a.v}%;background:${color};transition:width 0.8s"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ─── FLAGS ─────────────────────────────── */
+function renderFlags() {
+  if (!d.flags.length) return;
+  document.getElementById('flagsCard').style.display = 'block';
+  document.getElementById('flagsList').innerHTML = d.flags.map(f=>`
+    <div style="padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:13px">
+      <span style="color:var(--yellow)">⚠️</span> ${f}
+    </div>`).join('') +
+    `<div style="padding:10px 20px;font-size:13px;color:var(--text-muted)">
+      <strong>توصية:</strong> ${d.recommendation}
+    </div>`;
+}
+
+/* ─── CONSULTATIONS ─────────────────────── */
+function renderConsultations() {
+  const icons = {استشارة:'🤝','استشارة استثمارية':'💼','استشارة تسويقية':'📢','استشارة مالية':'💰','استشارة منتج':'📦','استشارة تقنية':'💻'};
+  const statusClass = {open:'s-open',scheduled:'s-scheduled',done:'s-done'};
+  const statusLabel = {open:'مفتوح',scheduled:'مجدولة',done:'مكتملة'};
+  document.getElementById('consultsList').innerHTML = d.consultations.slice(0,4).map(c=>`
+    <div class="consult-item">
+      <div class="ci-icon">${icons[c.type]||'🤝'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ci-type">${c.type}</div>
+        <div class="ci-date">${c.date}</div>
+      </div>
+      <span class="ci-status ${statusClass[c.status]||''}">${statusLabel[c.status]||c.status}</span>
+    </div>`).join('') +
+    `<div style="padding:10px 20px;text-align:center">
+      <a href="founder-consultations.html" class="alert-action action-navy" style="font-size:12px;padding:7px 16px">+ طلب استشارة جديد</a>
+    </div>`;
+}
+
+/* ─── HELPERS ───────────────────────────── */
+function getWeekNum(d){
+  const s=new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-s)/86400000+s.getDay()+1)/7);
+}
+
+function toggleTheme(){
+  const dark=document.body.dataset.theme==='dark';
+  document.body.dataset.theme=dark?'light':'dark';
+  document.querySelector('.icon-btn').textContent=dark?'🌙':'☀️';
+  document.getElementById('topLogo').src=dark?'light_logo.png':'dark_logo.png';
+}
+
+/* ─── INIT ──────────────────────────────── */
+async function init(){
+  // Try real API first
+  try{
+    const res=await fetch('/api/founder/dashboard',{credentials:'include'});
+    if(res.ok){
+      const json=await res.json();
+      Object.assign(d,json);
+    }
+  }catch(e){}
+
+  renderHero();
+  renderAlert();
+  renderQuickActions();
+  loadStartupProfileCard();
+  renderChart();
+  renderRecentWeeks();
+  renderCBars();
+  renderFlags();
+  renderConsultations();
+}
+
+init();
+</script>
+</body>
+</html>

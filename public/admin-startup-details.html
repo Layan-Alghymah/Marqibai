@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الشركة — مرقب AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:#16173D;--navy2:#132154;--purple:#9C6599;
+  --bg:#f0eef8;--sidebar-bg:#16173D;--card-bg:#ffffff;
+  --text:#16173D;--text-muted:#6b6b8a;--border:rgba(22,23,61,0.1);
+  --shadow:0 2px 12px rgba(22,23,61,0.07);
+  --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;
+  --sidebar-w:240px;
+}
+[data-theme="dark"]{
+  --bg:#080918;--card-bg:#10112a;--text:#e8e8f0;--text-muted:#8080a8;
+  --border:rgba(255,255,255,0.07);--shadow:0 2px 12px rgba(0,0,0,0.4);--sidebar-bg:#060714;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;transition:all 0.3s;}
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);position:fixed;top:0;right:0;bottom:0;z-index:50;display:flex;flex-direction:column;}
+.sidebar-header{padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.sidebar-logo{width:130px;}
+.sidebar-nav{flex:1;padding:20px 12px;display:flex;flex-direction:column;gap:4px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all 0.2s;color:rgba(255,255,255,0.65);font-size:14px;font-weight:500;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:white;}
+.nav-item.active{background:rgba(156,101,153,0.2);color:white;}
+.main{margin-right:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:64px;background:var(--card-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:40;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.back-btn{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.back-btn:hover{background:var(--navy2);color:white;border-color:var(--navy2);}
+.topbar-title{font-size:16px;font-weight:700;}
+.topbar-actions{display:flex;gap:10px;align-items:center;}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.page{padding:28px;flex:1;}
+.card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.card-body{padding:20px;}
+
+/* HERO CARD */
+.hero-card{background:linear-gradient(135deg,#132154 0%,#16173D 60%,rgba(156,101,153,0.5) 100%);color:white;border-radius:16px;padding:28px;margin-bottom:20px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;}
+.hero-name{font-size:26px;font-weight:900;margin-bottom:6px;}
+.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.hero-badge{padding:4px 12px;border-radius:100px;font-size:12px;font-weight:700;background:rgba(255,255,255,0.12);}
+.hero-flags{display:flex;flex-direction:column;gap:8px;}
+.flag-item{display:flex;align-items:center;gap:8px;font-size:13px;opacity:0.9;}
+.hero-health{text-align:center;}
+.health-circle{width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,0.2);margin-bottom:8px;}
+.health-number{font-size:28px;font-weight:900;}
+.health-label{font-size:11px;opacity:0.7;}
+.risk-label{padding:5px 14px;border-radius:100px;font-size:12px;font-weight:700;}
+.risk-high{background:rgba(239,68,68,0.3);color:#fca5a5;}
+.risk-medium{background:rgba(245,158,11,0.3);color:#fde68a;}
+.risk-low{background:rgba(34,197,94,0.3);color:#86efac;}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.mini-stat{background:var(--card-bg);border-radius:12px;padding:16px;border:1px solid var(--border);text-align:center;}
+.mini-stat-label{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;margin-bottom:6px;}
+.mini-stat-val{font-size:22px;font-weight:900;}
+
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{color:var(--text-muted);font-weight:500;}
+.detail-val{font-weight:700;}
+.badge{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;}
+.badge-red{background:rgba(239,68,68,0.1);color:var(--red);}
+.badge-yellow{background:rgba(245,158,11,0.1);color:var(--yellow);}
+.badge-green{background:rgba(34,197,94,0.1);color:var(--green);}
+.badge-purple{background:rgba(156,101,153,0.12);color:var(--purple);}
+
+.c-bar-wrap{margin-bottom:16px;}
+.c-bar-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;font-weight:600;}
+.c-bar{height:8px;border-radius:100px;background:var(--border);overflow:hidden;}
+.c-bar-fill{height:100%;border-radius:100px;transition:width 0.8s;}
+
+.timeline-week{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.timeline-week:last-child{border-bottom:none;}
+.week-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.week-info{flex:1;}
+.week-title{font-size:13px;font-weight:600;}
+.week-sub{font-size:11px;color:var(--text-muted);}
+.week-score{font-size:14px;font-weight:900;}
+
+.action-buttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;}
+.action-btn{padding:12px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center;}
+.action-btn:hover{border-color:var(--navy2);background:var(--navy2);color:white;}
+.action-btn.primary{background:linear-gradient(135deg,#132154,#9C6599);color:white;border:none;box-shadow:0 4px 12px rgba(156,101,153,0.3);}
+
+.notes-area{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;resize:vertical;min-height:100px;outline:none;transition:all 0.2s;}
+.notes-area:focus{border-color:var(--purple);}
+.save-btn{margin-top:10px;padding:9px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+
+.consult-item{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.consult-item:last-child{border-bottom:none;}
+.consult-type{font-size:13px;font-weight:700;}
+.consult-date{font-size:11px;color:var(--text-muted);}
+.status-badge{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;}
+.status-open{background:rgba(245,158,11,0.1);color:var(--yellow);}
+.status-done{background:rgba(34,197,94,0.1);color:var(--green);}
+.status-scheduled{background:rgba(156,101,153,0.12);color:var(--purple);}
+.status-absent{background:rgba(239,68,68,0.1);color:var(--red);}
+
+@media(max-width:900px){
+  .sidebar{width:60px;}
+  .main{margin-right:60px;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .hero-card{grid-template-columns:1fr;}
+  .action-buttons{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body data-theme="light">
+<aside class="sidebar">
+  <div class="sidebar-header"><img src="dark_logo.png" class="sidebar-logo" alt="مرقب"></div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><span>📊</span><span>لوحة المتابعة</span></a>
+    <a href="#" class="nav-item active"><span>🏢</span><span>الشركات</span></a>
+    <a href="admin-invites.html" class="nav-item"><span>🔗</span><span>أكواد الدعوة</span></a>
+    <a href="#" class="nav-item"><span>🤝</span><span>الاستشارات</span></a>
+  </nav>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <a href="admin-dashboard.html" class="back-btn">← العودة</a>
+      <div class="topbar-title" id="pageTitle">تفاصيل الشركة</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <div class="page" id="pageContent">
+    <div style="text-align:center;padding:60px;color:var(--text-muted)">جارٍ تحميل البيانات...</div>
+  </div>
+</div>
+
+<script>
+/* ================================================
+   MOCK DATA — 15 شركة كاملة
+   ================================================ */
+const BASE_STARTUPS = [
+  {id:"ST001",name:"نماء للتقنية",stage:"MVP",type:"تقني",health:32,risk:"high",escalation:true,c1:40,c2:25,c3:30,c4:35,flags:["إيرادات صفر +4 أسابيع","Runway أقل من شهرين","لم يرسل تحديث أسبوعين"],recommendation:"اجتماع مراجعة طارئ — النظر في إعادة الهيكلة",committed:false,lastUpdate:"منذ أسبوعين",revenue_current:0,revenue_prev:5000,customers_new:0,retention:0,runway:1.5,expense_ratio:2.1,goals_planned:5,goals_done:1,history:[{week:"أسبوع 1",health:55,sent:true},{week:"أسبوع 2",health:48,sent:true},{week:"أسبوع 3",health:42,sent:true},{week:"أسبوع 4",health:38,sent:false},{week:"أسبوع 5",health:35,sent:false},{week:"أسبوع 6",health:32,sent:false}],consultations:[{type:"استشارة مالية",date:"١٥ يناير",status:"absent"},{type:"استشارة منتج",date:"٢٢ يناير",status:"open"}],notes:"الشركة تمر بضغوط تشغيلية — تحتاج مراجعة عاجلة"},
+  {id:"ST002",name:"سدرة للاستشارات",stage:"فكرة",type:"خدمي",health:55,risk:"medium",escalation:false,c1:60,c2:50,c3:55,c4:55,flags:["نسبة الإنجاز أقل من 50%","لا يوجد عملاء مؤكدون"],recommendation:"جلسة إرشاد لتحديد نموذج العمل",committed:true,lastUpdate:"منذ يومين",revenue_current:8000,revenue_prev:6000,customers_new:3,retention:45,runway:5,expense_ratio:0.9,goals_planned:4,goals_done:2,history:[{week:"أسبوع 1",health:48,sent:true},{week:"أسبوع 2",health:52,sent:true},{week:"أسبوع 3",health:50,sent:true},{week:"أسبوع 4",health:55,sent:true},{week:"أسبوع 5",health:53,sent:true},{week:"أسبوع 6",health:55,sent:true}],consultations:[{type:"استشارة تسويقية",date:"١٠ يناير",status:"done"},{type:"استشارة استثمارية",date:"٢٠ يناير",status:"scheduled"}],notes:""},
+  {id:"ST003",name:"رحلة للسياحة الذكية",stage:"نمو",type:"منتج",health:84,risk:"low",escalation:false,c1:85,c2:90,c3:80,c4:82,flags:[],recommendation:"الاستمرار + دعم في التوسع الجغرافي",committed:true,lastUpdate:"أمس",revenue_current:85000,revenue_prev:70000,customers_new:25,retention:72,runway:14,expense_ratio:0.6,goals_planned:6,goals_done:5,history:[{week:"أسبوع 1",health:75,sent:true},{week:"أسبوع 2",health:78,sent:true},{week:"أسبوع 3",health:80,sent:true},{week:"أسبوع 4",health:81,sent:true},{week:"أسبوع 5",health:83,sent:true},{week:"أسبوع 6",health:84,sent:true}],consultations:[{type:"استشارة استثمارية",date:"٥ يناير",status:"done"}],notes:""},
+  {id:"ST004",name:"بذرة الأغذية",stage:"MVP",type:"أسرة منتجة",health:47,risk:"medium",escalation:false,c1:55,c2:40,c3:50,c4:45,flags:["معدل عودة العملاء 18%","نسبة المصروف للإيراد 1.4"],recommendation:"تحسين استراتيجية الاحتفاظ",committed:true,lastUpdate:"منذ 3 أيام",revenue_current:12000,revenue_prev:10000,customers_new:4,retention:18,runway:4,expense_ratio:1.4,goals_planned:4,goals_done:2,history:[{week:"أسبوع 1",health:52,sent:true},{week:"أسبوع 2",health:50,sent:true},{week:"أسبوع 3",health:48,sent:true},{week:"أسبوع 4",health:47,sent:true},{week:"أسبوع 5",health:46,sent:true},{week:"أسبوع 6",health:47,sent:true}],consultations:[{type:"استشارة تسويقية",date:"١٢ يناير",status:"open"}],notes:""},
+  {id:"ST005",name:"مسار التعليمي",stage:"فكرة",type:"تقني",health:28,risk:"high",escalation:true,c1:30,c2:20,c3:35,c4:28,flags:["لم يرسل تحديث 3 أسابيع","لا يوجد MVP","لا تحقق من السوق"],recommendation:"تصعيد — مراجعة مع لجنة الحاضنة",committed:false,lastUpdate:"منذ 3 أسابيع",revenue_current:0,revenue_prev:0,customers_new:0,retention:0,runway:3,expense_ratio:0,goals_planned:3,goals_done:0,history:[{week:"أسبوع 1",health:40,sent:true},{week:"أسبوع 2",health:36,sent:true},{week:"أسبوع 3",health:33,sent:false},{week:"أسبوع 4",health:30,sent:false},{week:"أسبوع 5",health:29,sent:false},{week:"أسبوع 6",health:28,sent:false}],consultations:[],notes:""},
+  {id:"ST009",name:"تكييف سمارت",stage:"MVP",type:"منتج",health:43,risk:"medium",escalation:false,c1:50,c2:38,c3:44,c4:42,flags:["نمو الإيرادات متوقف أسبوعين","معدل احتفاظ 22%"],recommendation:"تحليل سبب توقف النمو + مراجعة التسعير",committed:true,lastUpdate:"منذ 4 أيام",revenue_current:9500,revenue_prev:9500,customers_new:2,retention:22,runway:4,expense_ratio:1.1,goals_planned:4,goals_done:2,history:[{week:"أسبوع 1",health:48,sent:true},{week:"أسبوع 2",health:46,sent:true},{week:"أسبوع 3",health:44,sent:true},{week:"أسبوع 4",health:43,sent:true},{week:"أسبوع 5",health:43,sent:true},{week:"أسبوع 6",health:43,sent:true}],consultations:[{type:"استشارة منتج",date:"١٨ يناير",status:"scheduled"}],notes:""},
+  {id:"ST013",name:"نبتة الصحة",stage:"نمو",type:"أسرة منتجة",health:88,risk:"low",escalation:false,c1:90,c2:92,c3:85,c4:87,flags:[],recommendation:"تسريع التوسع + Pitch للمستثمرين",committed:true,lastUpdate:"اليوم",revenue_current:120000,revenue_prev:98000,customers_new:35,retention:78,runway:18,expense_ratio:0.5,goals_planned:6,goals_done:6,history:[{week:"أسبوع 1",health:80,sent:true},{week:"أسبوع 2",health:82,sent:true},{week:"أسبوع 3",health:84,sent:true},{week:"أسبوع 4",health:86,sent:true},{week:"أسبوع 5",health:87,sent:true},{week:"أسبوع 6",health:88,sent:true}],consultations:[{type:"استشارة استثمارية",date:"٢٢ يناير",status:"done"}],notes:""},
+  {id:"ST015",name:"جسر اللوجستيك",stage:"نمو",type:"خدمي",health:22,risk:"high",escalation:true,c1:25,c2:18,c3:22,c4:24,flags:["انخفاض حاد في الإيرادات 40%","Runway شهر واحد","لم يرسل تحديث"],recommendation:"تصعيد فوري — وضع حرج يهدد الاستمرارية",committed:false,lastUpdate:"منذ أسبوعين",revenue_current:15000,revenue_prev:25000,customers_new:0,retention:15,runway:1,expense_ratio:2.5,goals_planned:4,goals_done:0,history:[{week:"أسبوع 1",health:60,sent:true},{week:"أسبوع 2",health:50,sent:true},{week:"أسبوع 3",health:40,sent:true},{week:"أسبوع 4",health:32,sent:false},{week:"أسبوع 5",health:27,sent:false},{week:"أسبوع 6",health:22,sent:false}],consultations:[{type:"استشارة مالية",date:"٨ يناير",status:"absent"},{type:"استشارة تشغيلية",date:"١٥ يناير",status:"absent"}],notes:""},
+];
+
+function getDefaultData(id){
+  return {id,name:`شركة ${id}`,stage:"MVP",type:"تقني",health:60,risk:"medium",escalation:false,c1:60,c2:55,c3:60,c4:65,flags:["بيانات جزئية"],recommendation:"انتظر التحديث الشهري القادم",committed:true,lastUpdate:"غير محدد",revenue_current:20000,revenue_prev:18000,customers_new:5,retention:40,runway:6,expense_ratio:0.8,goals_planned:4,goals_done:3,history:[{week:"أسبوع 1",health:58,sent:true},{week:"أسبوع 2",health:59,sent:true},{week:"أسبوع 3",health:60,sent:true},{week:"أسبوع 4",health:60,sent:true},{week:"أسبوع 5",health:61,sent:true},{week:"أسبوع 6",health:60,sent:true}],consultations:[],notes:""};
+}
+
+const MOCK_DATA = {
+  ST001:{id:"ST001",name:"نماء للتقنية",stage:"MVP",type:"تقني",health:32,risk:"high",escalation:true,
+    c1:40,c2:25,c3:30,c4:35,
+    flags:["الإيرادات صفر لأكثر من 4 أسابيع","Runway أقل من شهرين","لم يرسل تحديث 2 أسبوع"],
+    recommendation:"اجتماع مراجعة طارئ — النظر في إعادة الهيكلة",
+    committed:false,lastUpdate:"منذ أسبوعين",
+    revenue_current:0,revenue_prev:5000,customers_new:0,retention:0,runway:1.5,expense_ratio:2.1,
+    goals_planned:5,goals_done:1,
+    history:[{week:"الأسبوع 1",health:55,sent:true},{week:"الأسبوع 2",health:48,sent:true},{week:"الأسبوع 3",health:42,sent:true},{week:"الأسبوع 4",health:38,sent:false},{week:"الأسبوع 5",health:35,sent:false},{week:"الأسبوع 6",health:32,sent:false}],
+    consultations:[{type:"استشارة مالية",date:"١٥ يناير ٢٠٢٥",status:"absent"},{type:"استشارة منتج",date:"٢٢ يناير ٢٠٢٥",status:"open"}],
+    notes:"الشركة تمر بضغوط تشغيلية — تحتاج مراجعة عاجلة لنموذج العمل"
+  },
+  ST002:{id:"ST002",name:"سدرة للاستشارات",stage:"فكرة",type:"خدمي",health:55,risk:"medium",escalation:false,
+    c1:60,c2:50,c3:55,c4:55,
+    flags:["نسبة الإنجاز أقل من 50%","لا يوجد عملاء مؤكدون"],
+    recommendation:"جلسة إرشاد لتحديد نموذج العمل",
+    committed:true,lastUpdate:"منذ يومين",
+    revenue_current:8000,revenue_prev:6000,customers_new:3,retention:45,runway:5,expense_ratio:0.9,
+    goals_planned:4,goals_done:2,
+    history:[{week:"الأسبوع 1",health:48,sent:true},{week:"الأسبوع 2",health:52,sent:true},{week:"الأسبوع 3",health:50,sent:true},{week:"الأسبوع 4",health:55,sent:true},{week:"الأسبوع 5",health:53,sent:true},{week:"الأسبوع 6",health:55,sent:true}],
+    consultations:[{type:"استشارة تسويقية",date:"١٠ يناير ٢٠٢٥",status:"done"},{type:"استشارة استثمارية",date:"٢٠ يناير ٢٠٢٥",status:"scheduled"}],
+    notes:""
+  },
+  ST003:{id:"ST003",name:"رحلة للسياحة الذكية",stage:"نمو",type:"منتج",health:84,risk:"low",escalation:false,
+    c1:85,c2:90,c3:80,c4:82,flags:[],
+    recommendation:"الاستمرار + دعم في التوسع الجغرافي",
+    committed:true,lastUpdate:"أمس",
+    revenue_current:85000,revenue_prev:70000,customers_new:25,retention:72,runway:14,expense_ratio:0.6,
+    goals_planned:6,goals_done:5,
+    history:[{week:"الأسبوع 1",health:75,sent:true},{week:"الأسبوع 2",health:78,sent:true},{week:"الأسبوع 3",health:80,sent:true},{week:"الأسبوع 4",health:81,sent:true},{week:"الأسبوع 5",health:83,sent:true},{week:"الأسبوع 6",health:84,sent:true}],
+    consultations:[{type:"استشارة استثمارية",date:"٥ يناير ٢٠٢٥",status:"done"}],
+    notes:""
+  }
+};
+
+// Build lookup from array + original inline objects
+BASE_STARTUPS.forEach(s=>{ if(!MOCK_DATA[s.id]) MOCK_DATA[s.id]=s; });
+
+const params = new URLSearchParams(window.location.search);
+const startupId = params.get('id') || 'ST001';
+const startup = MOCK_DATA[startupId] || getDefaultData(startupId);
+
+document.getElementById('pageTitle').textContent = startup.name;
+
+function renderPage() {
+  const riskLabel = startup.risk==='high'?'مرتفع':startup.risk==='medium'?'متوسط':'منخفض';
+  const riskClass = startup.risk==='high'?'risk-high':startup.risk==='medium'?'risk-medium':'risk-low';
+  const healthColor = startup.health>=70?'#22c55e':startup.health>=45?'#f59e0b':'#ef4444';
+  const cColor = v => v>=70?'var(--green)':v>=45?'var(--yellow)':'var(--red)';
+
+  document.getElementById('pageContent').innerHTML = `
+
+    <!-- HERO -->
+    <div class="hero-card">
+      <div>
+        <div class="hero-name">${startup.name}</div>
+        <div class="hero-meta">
+          <span class="hero-badge">${startup.stage}</span>
+          <span class="hero-badge">${startup.type}</span>
+          <span class="hero-badge">${startup.id}</span>
+          ${startup.escalation?'<span class="hero-badge" style="background:rgba(249,115,22,0.3)">⚡ تصعيد</span>':''}
+        </div>
+        <div class="hero-flags">
+          ${startup.flags.length?startup.flags.map(f=>`<div class="flag-item">⚠️ ${f}</div>`).join(''):'<div class="flag-item">✅ لا توجد تنبيهات حرجة</div>'}
+        </div>
+        <div style="margin-top:16px;padding:12px 16px;background:rgba(255,255,255,0.1);border-radius:10px;font-size:13px">
+          <strong>توصية مرقب:</strong> ${startup.recommendation}
+        </div>
+      </div>
+      <div class="hero-health">
+        <div class="health-circle">
+          <div class="health-number" style="color:${healthColor}">${startup.health}</div>
+          <div class="health-label">مؤشر الصحة</div>
+        </div>
+        <span class="risk-label ${riskClass}">${riskLabel}</span>
+      </div>
+    </div>
+
+    <!-- C SCORES -->
+    <div class="grid-3">
+      ${[['C1','التقدم التشغيلي',startup.c1],['C2','النمو السوقي',startup.c2],['C3','الاستقرار المالي',startup.c3]].map(([c,l,v])=>`
+        <div class="mini-stat">
+          <div class="mini-stat-label">${c} — ${l}</div>
+          <div class="mini-stat-val" style="color:${cColor(v)}">${v}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="grid-3" style="margin-top:-4px">
+      <div class="mini-stat">
+        <div class="mini-stat-label">C4 — الالتزام والانضباط</div>
+        <div class="mini-stat-val" style="color:${cColor(startup.c4)}">${startup.c4}</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">إنجاز الأهداف</div>
+        <div class="mini-stat-val" style="color:${cColor((startup.goals_done/startup.goals_planned)*100)}">${startup.goals_done}/${startup.goals_planned}</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-stat-label">آخر تحديث</div>
+        <div style="font-size:16px;font-weight:700;margin-top:4px;color:${startup.committed?'var(--green)':'var(--red)'}">${startup.lastUpdate}</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- TIMELINE CHART -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 تطور مؤشر الصحة (آخر 6 أسابيع)</div>
+        </div>
+        <div class="card-body">
+          <canvas id="healthChart" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- FINANCIAL & MARKET -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">💰 المؤشرات المالية والسوقية</div></div>
+        <div class="card-body">
+          <div class="detail-row"><span class="detail-key">الإيراد الحالي</span><span class="detail-val">${startup.revenue_current.toLocaleString('ar-SA')} ر.س</span></div>
+          <div class="detail-row"><span class="detail-key">الإيراد السابق</span><span class="detail-val">${startup.revenue_prev.toLocaleString('ar-SA')} ر.س</span></div>
+          <div class="detail-row">
+            <span class="detail-key">النمو</span>
+            <span class="detail-val" style="color:${startup.revenue_current>=startup.revenue_prev?'var(--green)':'var(--red)'}">
+              ${startup.revenue_prev>0?((startup.revenue_current-startup.revenue_prev)/startup.revenue_prev*100).toFixed(1):0}%
+            </span>
+          </div>
+          <div class="detail-row"><span class="detail-key">عملاء جدد</span><span class="detail-val">${startup.customers_new}</span></div>
+          <div class="detail-row">
+            <span class="detail-key">معدل الاحتفاظ</span>
+            <span class="detail-val" style="color:${startup.retention>=50?'var(--green)':startup.retention>=30?'var(--yellow)':'var(--red)'}">
+              ${startup.retention}%
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Runway</span>
+            <span class="detail-val" style="color:${startup.runway>=6?'var(--green)':startup.runway>=3?'var(--yellow)':'var(--red)'}">
+              ${startup.runway} شهر
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">نسبة المصروف للإيراد</span>
+            <span class="detail-val" style="color:${startup.expense_ratio<=1?'var(--green)':startup.expense_ratio<=1.5?'var(--yellow)':'var(--red)'}">
+              ${startup.expense_ratio}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEEKLY HISTORY TIMELINE -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">📅 سجل الأسابيع</div></div>
+      <div class="card-body">
+        ${startup.history.map((w,i)=>`
+          <div class="timeline-week">
+            <div class="week-dot" style="background:${w.sent?'var(--green)':'var(--red)'}"></div>
+            <div class="week-info">
+              <div class="week-title">${w.week}</div>
+              <div class="week-sub">${w.sent?'✅ أرسل التحديث':'❌ لم يرسل'}</div>
+            </div>
+            <div class="week-score" style="color:${w.health>=70?'var(--green)':w.health>=45?'var(--yellow)':'var(--red)'}">${w.health}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- CONSULTATIONS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🤝 الاستشارات</div>
+          <button onclick="showToast('تم إضافة طلب استشارة')" style="padding:6px 14px;border-radius:7px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ إضافة</button>
+        </div>
+        ${startup.consultations.length?startup.consultations.map(c=>`
+          <div class="consult-item">
+            <div>
+              <div class="consult-type">${c.type}</div>
+              <div class="consult-date">${c.date}</div>
+            </div>
+            <span class="status-badge status-${c.status}">
+              ${c.status==='open'?'مفتوح':c.status==='done'?'مكتمل':c.status==='scheduled'?'مجدولة':'تغيّب'}
+            </span>
+          </div>
+        `).join(''):`<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">لا توجد استشارات</div>`}
+      </div>
+
+      <!-- NOTES -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">📝 ملاحظات الحاضنة</div></div>
+        <div class="card-body">
+          <textarea class="notes-area" id="notesArea" placeholder="أضف ملاحظاتك عن هذه الشركة...">${startup.notes||''}</textarea>
+          <button class="save-btn" onclick="saveNotes()">حفظ الملاحظات</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚡ الإجراءات</div></div>
+      <div class="card-body">
+        <div class="action-buttons">
+          <button class="action-btn primary" onclick="showToast('تم طلب اجتماع المراجعة')">📅 طلب اجتماع مراجعة</button>
+          <button class="action-btn" onclick="showToast('تم التوجيه للمستشار')">👨‍💼 توجيه لمستشار</button>
+          <button class="action-btn" onclick="showToast('تم تسجيل المتابعة')">📌 متابعة الأسبوع القادم</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ملف المشروع وخطة التنفيذ (من API) -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-header"><div class="card-title">📄 ملف المشروع وخطة التنفيذ</div></div>
+      <div class="card-body" id="profileSection">
+        <div style="text-align:center;color:var(--text-muted);font-size:13px">جارٍ تحميل ملف المشروع...</div>
+      </div>
+    </div>
+  `;
+
+  // Draw chart
+  setTimeout(drawChart, 100);
+  loadAdminProfile(startupId);
+}
+
+async function loadAdminProfile(sid) {
+  const el = document.getElementById('profileSection');
+  if (!el) return;
+  try {
+    const res = await fetch('/api/admin/startups/' + encodeURIComponent(sid) + '/profile', { credentials: 'include' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">' + (err.error || 'غير متاح أو غير مصرح') + '</div>';
+      return;
+    }
+    const data = await res.json();
+    const plan = data.plan || {};
+    const dels = data.deliverables || [];
+    const typeLabels = { feature:'ميزة', service:'خدمة', product:'منتج', campaign:'حملة', partnership:'شراكة', other:'أخرى' };
+    const statusLabels = { planned:'مخطط', in_progress:'قيد التنفيذ', done:'منجز', blocked:'معطل' };
+    el.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div class="detail-row"><span class="detail-key">ملخص</span><span class="detail-val">${(plan.summary || '—').substring(0,200)}${(plan.summary||'').length>200?'…':''}</span></div>
+        <div class="detail-row"><span class="detail-key">النتائج المتوقعة</span><span class="detail-val">${(plan.expected_outcomes || '—').substring(0,200)}${(plan.expected_outcomes||'').length>200?'…':''}</span></div>
+        <div class="detail-row"><span class="detail-key">المعلم القادم</span><span class="detail-val">${plan.next_milestone_title || '—'}</span></div>
+        <div class="detail-row"><span class="detail-key">موعد المعلم</span><span class="detail-val">${plan.next_milestone_due_date ? new Date(plan.next_milestone_due_date).toLocaleDateString('ar-SA') : '—'}</span></div>
+      </div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">التسليمات (للقراءة فقط)</div>
+      ${dels.length ? `
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:1px solid var(--border)">
+            <th style="text-align:right;padding:8px;color:var(--text-muted)">العنوان</th>
+            <th style="text-align:right;padding:8px;color:var(--text-muted)">النوع</th>
+            <th style="text-align:right;padding:8px;color:var(--text-muted)">الموعد</th>
+            <th style="text-align:right;padding:8px;color:var(--text-muted)">الحالة</th>
+          </tr></thead>
+          <tbody>
+            ${dels.map(d=>'<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px">'+d.title+'</td><td style="padding:8px">'+(typeLabels[d.deliverable_type]||d.deliverable_type)+'</td><td style="padding:8px">'+(d.target_date?new Date(d.target_date).toLocaleDateString('ar-SA'):'—')+'</td><td style="padding:8px">'+(statusLabels[d.status]||d.status)+'</td></tr>').join('')}
+          </tbody>
+        </table>
+      </div>
+      ` : '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">لا تسليمات مسجّلة</div>'}
+    `;
+  } catch (e) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">خطأ في تحميل الملف</div>';
+  }
+}
+
+function drawChart() {
+  const ctx = document.getElementById('healthChart');
+  if (!ctx) return;
+  const labels = startup.history.map(w=>w.week);
+  const data = startup.history.map(w=>w.health);
+  const healthColor = startup.health>=70?'#22c55e':startup.health>=45?'#f59e0b':'#ef4444';
+  
+  // Gradient fill
+  const chartCtx = ctx.getContext('2d');
+  const gradient = chartCtx.createLinearGradient(0,0,0,200);
+  gradient.addColorStop(0, healthColor+'40');
+  gradient.addColorStop(1, healthColor+'05');
+
+  // Zone annotation lines
+  const zones = [
+    {y:70,color:'rgba(34,197,94,0.25)',label:'منطقة آمنة'},
+    {y:45,color:'rgba(245,158,11,0.25)',label:'منطقة تحذير'},
+  ];
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'مؤشر الصحة',
+          data,
+          borderColor: healthColor,
+          backgroundColor: gradient,
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: startup.history.map(w=>w.sent?healthColor:'#ef4444'),
+          pointBorderColor: startup.history.map(w=>w.sent?'white':'#ef4444'),
+          pointBorderWidth: 2,
+          pointRadius: startup.history.map(w=>w.sent?6:8),
+          pointHoverRadius: 9,
+          pointStyle: startup.history.map(w=>w.sent?'circle':'rectRot'),
+        },
+        {
+          label: 'حد الأمان (70)',
+          data: labels.map(()=>70),
+          borderColor: 'rgba(34,197,94,0.4)',
+          borderWidth: 1.5,
+          borderDash: [6,4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        },
+        {
+          label: 'حد التحذير (45)',
+          data: labels.map(()=>45),
+          borderColor: 'rgba(245,158,11,0.4)',
+          borderWidth: 1.5,
+          borderDash: [6,4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { filter: item => item.datasetIndex===0, font:{family:'Cairo'} }
+        },
+        tooltip: {
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => {
+              if(ctx.datasetIndex!==0) return null;
+              const w=startup.history[ctx.dataIndex];
+              return [`  الصحة: ${ctx.raw}`, `  ${w.sent?'✅ أرسل التحديث':'❌ لم يرسل'}`];
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(0,0,0,0.04)' },
+          ticks: {
+            callback: v => v===70?'آمن ▶':v===45?'تحذير ▶':v,
+            font:{family:'Cairo'}
+          }
+        },
+        x: { grid: { display: false }, ticks:{font:{family:'Cairo'}} }
+      }
+    }
+  });
+}
+
+// Toast
+const toast = document.createElement('div');
+toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#132154;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;transition:transform 0.3s;box-shadow:0 8px 24px rgba(19,33,84,0.4);font-family:Cairo,sans-serif';
+document.body.appendChild(toast);
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(()=>toast.style.transform='translateX(-50%) translateY(80px)',3000);
+}
+
+function saveNotes() {
+  showToast('✅ تم حفظ الملاحظات');
+}
+
+function toggleTheme() {
+  const isDark = document.body.dataset.theme==='dark';
+  document.body.dataset.theme = isDark?'light':'dark';
+}
+
+renderPage();
+</script>
+</body>
+</html>

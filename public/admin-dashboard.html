@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الحاضنة — مرقب AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #16173D; --navy2: #132154; --purple: #9C6599; --purple-light: #c49bc2;
+  --bg: #f0eef8; --sidebar-bg: #16173D; --card-bg: #ffffff;
+  --text: #16173D; --text-muted: #6b6b8a; --text-sidebar: rgba(255,255,255,0.75);
+  --border: rgba(22,23,61,0.1); --shadow: 0 2px 12px rgba(22,23,61,0.07);
+  --green: #22c55e; --yellow: #f59e0b; --red: #ef4444; --orange: #f97316;
+  --green-bg: rgba(34,197,94,0.1); --yellow-bg: rgba(245,158,11,0.1); --red-bg: rgba(239,68,68,0.1);
+  --sidebar-w: 240px; --header-h: 64px;
+}
+[data-theme="dark"] {
+  --bg: #080918; --card-bg: #10112a; --text: #e8e8f0; --text-muted: #8080a8;
+  --border: rgba(255,255,255,0.07); --shadow: 0 2px 12px rgba(0,0,0,0.4);
+  --sidebar-bg: #060714;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; transition: all 0.3s; overflow-x: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w); background: var(--sidebar-bg);
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 50;
+  display: flex; flex-direction: column;
+  transition: width 0.3s;
+}
+.sidebar-header {
+  padding: 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo { width: 130px; }
+.sidebar-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+  border-radius: 10px; cursor: pointer; transition: all 0.2s;
+  color: var(--text-sidebar); font-size: 14px; font-weight: 500;
+  text-decoration: none; position: relative;
+}
+.nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+.nav-item.active { background: rgba(156,101,153,0.2); color: white; }
+.nav-item.active::before {
+  content: ''; position: absolute; right: 0; top: 20%; bottom: 20%;
+  width: 3px; border-radius: 0 4px 4px 0; background: var(--purple);
+}
+.nav-icon { font-size: 17px; width: 22px; text-align: center; }
+.nav-badge {
+  margin-right: auto; background: var(--red); color: white;
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 100px;
+}
+.sidebar-footer {
+  padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* MAIN */
+.main { margin-right: var(--sidebar-w); flex: 1; min-height: 100vh; min-width: 0; display: flex; flex-direction: column; }
+
+/* TOPBAR */
+.topbar {
+  height: var(--header-h); background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; position: sticky; top: 0; z-index: 40;
+  box-shadow: 0 1px 8px rgba(22,23,61,0.05);
+}
+.topbar-title { font-size: 17px; font-weight: 700; }
+.topbar-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  position: relative;
+}
+.icon-btn:hover { background: var(--border); }
+.notif-dot {
+  position: absolute; top: 6px; left: 6px;
+  width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+  border: 1.5px solid var(--card-bg);
+}
+.refresh-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 8px; border: 1.5px solid var(--navy2);
+  background: transparent; color: var(--text); font-family: 'Cairo', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.refresh-btn:hover { background: var(--navy2); color: white; }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 6px; border-radius: 100px;
+  background: var(--bg); border: 1px solid var(--border);
+}
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #132154, #9C6599);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: 700;
+}
+.user-name { font-size: 13px; font-weight: 600; }
+
+/* PAGE CONTENT */
+.page { padding: 28px; flex: 1; min-width: 0; max-width: 100%; }
+
+/* KPI CARDS */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--card-bg); border-radius: 14px; padding: 18px 16px;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  transition: transform 0.2s; cursor: default;
+}
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+.kpi-value { font-size: 28px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+.kpi-sub { font-size: 11px; color: var(--text-muted); }
+.kpi-card.danger .kpi-value { color: var(--red); }
+.kpi-card.warning .kpi-value { color: var(--yellow); }
+.kpi-card.success .kpi-value { color: var(--green); }
+.kpi-card.purple .kpi-value { color: var(--purple); }
+.kpi-trend { font-size: 11px; margin-top: 6px; }
+.trend-up { color: var(--green); }
+.trend-down { color: var(--red); }
+
+/* CONTENT GRID */
+.content-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; }
+.content-grid > div:first-child { min-width: 0; }
+
+/* PRIORITY INBOX */
+.card {
+  background: var(--card-bg); border-radius: 14px;
+  border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden;
+}
+.card-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.card-badge {
+  background: var(--red-bg); color: var(--red);
+  font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 100px;
+}
+.card-badge.yellow { background: var(--yellow-bg); color: var(--yellow); }
+.view-all { font-size: 12px; color: var(--purple); text-decoration: none; font-weight: 600; cursor: pointer; }
+.view-all:hover { text-decoration: underline; }
+
+.alert-item {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 14px; transition: background 0.15s; cursor: pointer;
+}
+.alert-item:hover { background: rgba(239,68,68,0.03); }
+.alert-item:last-child { border-bottom: none; }
+.alert-icon {
+  width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.alert-icon.red { background: var(--red-bg); }
+.alert-icon.orange { background: rgba(249,115,22,0.1); }
+.alert-info { flex: 1; min-width: 0; }
+.alert-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.alert-reason { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.alert-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+.badge {
+  padding: 2px 8px; border-radius: 100px; font-size: 10px; font-weight: 700;
+  white-space: nowrap;
+}
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-orange { background: rgba(249,115,22,0.12); color: var(--orange); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-gray { background: rgba(100,100,120,0.1); color: var(--text-muted); }
+.badge-purple { background: rgba(156,101,153,0.12); color: var(--purple); }
+
+/* FILTERS */
+.filters-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  background: var(--bg); border-radius: 14px 14px 0 0;
+}
+.filter-btn {
+  padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: var(--card-bg); color: var(--text-muted);
+  font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.filter-btn.active { border-color: var(--navy2); background: var(--navy2); color: white; }
+.filter-btn:hover:not(.active) { border-color: var(--navy2); color: var(--navy2); }
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: var(--card-bg); margin-right: auto;
+}
+.search-box input {
+  border: none; background: none; font-family: 'Cairo', sans-serif;
+  font-size: 13px; color: var(--text); outline: none; width: 180px;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+
+/* TABLE */
+.table-wrapper { overflow-x: auto; max-width: 100%; width: 100%; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; min-width: 980px; }
+thead th {
+  padding: 12px 16px; text-align: right; font-size: 11px; font-weight: 700;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;
+  border-bottom: 1px solid var(--border); background: var(--bg); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
+tbody tr:hover { background: rgba(156,101,153,0.04); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 13px 16px; font-size: 13px; vertical-align: middle; white-space: nowrap; }
+.company-info { display: flex; flex-direction: column; }
+.company-name { font-weight: 700; font-size: 13px; }
+.company-id { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.health-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.health-bar {
+  width: 60px; height: 5px; border-radius: 100px;
+  background: var(--border); overflow: hidden;
+}
+.health-fill { height: 100%; border-radius: 100px; transition: width 0.5s; }
+.health-num { font-size: 12px; font-weight: 700; min-width: 24px; }
+.c-score { text-align: center; font-size: 12px; font-weight: 700; }
+.commitment-chip {
+  display: flex; align-items: center; gap: 5px; font-size: 11px;
+  padding: 3px 9px; border-radius: 100px; font-weight: 600;
+}
+.commitment-sent { background: var(--green-bg); color: var(--green); }
+.commitment-late { background: var(--red-bg); color: var(--red); }
+.action-btn {
+  padding: 6px 14px; border-radius: 7px; border: 1.5px solid var(--border);
+  background: transparent; color: var(--navy2); font-family: 'Cairo', sans-serif;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.action-btn:hover { background: var(--navy2); color: white; border-color: var(--navy2); }
+
+/* COMPLIANCE CARD */
+.compliance-item { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.compliance-item:last-child { border-bottom: none; }
+.compliance-name { font-size: 13px; font-weight: 600; flex: 1; }
+.compliance-week { font-size: 11px; color: var(--text-muted); }
+.compliance-bar-wrap { width: 80px; }
+.compliance-bar { height: 5px; border-radius: 100px; background: var(--border); overflow: hidden; }
+.compliance-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #132154, #9C6599); }
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(240,238,248,0.8); z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px;
+}
+[data-theme="dark"] .loading-overlay { background: rgba(8,9,24,0.9); }
+.spinner {
+  width: 44px; height: 44px; border: 3px solid var(--border);
+  border-top-color: var(--purple); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: #132154; color: white; padding: 12px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; z-index: 300; transition: transform 0.3s;
+  box-shadow: 0 8px 24px rgba(19,33,84,0.4);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* توافق شاشة اللابتوب (حتى 1440px) */
+@media (max-width: 1440px) {
+  .page { padding: 20px 20px; }
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-card { padding: 14px 12px; }
+  .kpi-value { font-size: 24px; }
+  .kpi-label { font-size: 10px; }
+  .content-grid { grid-template-columns: 1fr 300px; gap: 16px; }
+  .topbar { padding: 0 20px; }
+  .filters-bar { padding: 12px 16px; gap: 8px; }
+  .card-header { padding: 14px 16px; }
+  thead th, td { padding: 10px 12px; font-size: 12px; }
+}
+
+@media (max-width: 1200px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .content-grid { grid-template-columns: 1fr; }
+  .sidebar { width: 220px; }
+  .main { margin-right: 220px; }
+  .page { padding: 18px 16px; }
+}
+
+@media (max-width: 900px) {
+  .sidebar { width: 60px; }
+  .nav-item span, .sidebar-header .sidebar-logo, .sidebar-footer .nav-item span { display: none; }
+  .main { margin-right: 60px; }
+  .content-grid { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .page { padding: 14px 12px; }
+  .topbar { padding: 0 14px; }
+  .kpi-value { font-size: 22px; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <span style="color:var(--text-muted);font-size:13px">جارٍ تحميل البيانات...</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <img src="dark_logo.png" alt="مرقب AI" class="sidebar-logo">
+  </div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item active">
+      <span class="nav-icon">📊</span>
+      <span>لوحة المتابعة</span>
+    </a>
+    <a href="admin-startup-details.html" class="nav-item">
+      <span class="nav-icon">🏢</span>
+      <span>الشركات</span>
+      <span class="nav-badge" id="alertCount">3</span>
+    </a>
+    <a href="admin-invites.html" class="nav-item">
+      <span class="nav-icon">🔗</span>
+      <span>أكواد الدعوة</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">🤝</span>
+      <span>الاستشارات</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">📈</span>
+      <span>التقارير</span>
+    </a>
+    <a href="#" class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span>الإعدادات</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="login.html" class="nav-item" onclick="return confirm('هل تريد الخروج؟')">
+      <span class="nav-icon">🚪</span>
+      <span>خروج</span>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">لوحة متابعة الحاضنة</div>
+      <div class="topbar-subtitle" id="lastUpdate">آخر تحديث: يتم التحميل...</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="تبديل الثيم">🌙</button>
+      <div class="icon-btn">
+        🔔
+        <div class="notif-dot" id="notifDot"></div>
+      </div>
+      <button class="refresh-btn" onclick="refreshData()">
+        🔄 تحديث الآن
+      </button>
+      <div class="user-chip">
+        <div class="user-avatar">ن</div>
+        <span class="user-name">نورة العتيبي</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE -->
+  <div class="page">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-label">إجمالي الشركات</div>
+        <div class="kpi-value" id="kpi-total">—</div>
+        <div class="kpi-sub">في الحاضنة</div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-label">خطر مرتفع 🔴</div>
+        <div class="kpi-value" id="kpi-high">—</div>
+        <div class="kpi-sub">تتطلب تدخلًا</div>
+      </div>
+      <div class="kpi-card warning">
+        <div class="kpi-label">خطر متوسط 🟡</div>
+        <div class="kpi-value" id="kpi-med">—</div>
+        <div class="kpi-sub">تحت المراقبة</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">خطر منخفض 🟢</div>
+        <div class="kpi-value" id="kpi-low">—</div>
+        <div class="kpi-sub">أداء جيد</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-label">يتطلب تصعيد ⚡</div>
+        <div class="kpi-value" id="kpi-esc">—</div>
+        <div class="kpi-sub">للمراجعة الفورية</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">الالتزام الأسبوعي</div>
+        <div class="kpi-value" id="kpi-commit">—</div>
+        <div class="kpi-sub">أرسلت التحديث</div>
+      </div>
+    </div>
+
+    <!-- CONTENT GRID -->
+    <div class="content-grid">
+
+      <!-- MAIN TABLE SECTION -->
+      <div>
+        <!-- PRIORITY ALERTS -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title">
+              ⚠️ التنبيهات الحرجة
+              <span class="card-badge" id="alertBadge">—</span>
+            </div>
+            <a class="view-all" onclick="setFilter('all')">عرض الكل</a>
+          </div>
+          <div id="alertsList">
+            <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">جارٍ التحميل...</div>
+          </div>
+        </div>
+
+        <!-- FILTERS + TABLE -->
+        <div class="card">
+          <div class="filters-bar" style="flex-direction:column;align-items:flex-start;gap:10px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;width:100%">
+              <span style="font-size:11px;color:var(--text-muted);font-weight:700">الخطر:</span>
+              <button class="filter-btn risk-btn active" onclick="setRiskFilter('all',this)">الكل</button>
+              <button class="filter-btn risk-btn" onclick="setRiskFilter('high',this)">🔴 مرتفع</button>
+              <button class="filter-btn risk-btn" onclick="setRiskFilter('medium',this)">🟡 متوسط</button>
+              <button class="filter-btn risk-btn" onclick="setRiskFilter('low',this)">🟢 منخفض</button>
+              <button class="filter-btn risk-btn" onclick="setRiskFilter('escalation',this)">⚡ تصعيد</button>
+              <div class="search-box" style="margin-right:auto">
+                <span>🔍</span>
+                <input type="text" placeholder="بحث باسم الشركة..." id="searchInput" oninput="filterTable()">
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <span style="font-size:11px;color:var(--text-muted);font-weight:700">المرحلة:</span>
+              <button class="filter-btn stage-btn active" onclick="setStageFilter('all',this)">الكل</button>
+              <button class="filter-btn stage-btn" onclick="setStageFilter('فكرة',this)">💡 فكرة</button>
+              <button class="filter-btn stage-btn" onclick="setStageFilter('MVP',this)">🚀 MVP</button>
+              <button class="filter-btn stage-btn" onclick="setStageFilter('نمو',this)">📈 نمو</button>
+              <span style="font-size:11px;color:var(--text-muted);font-weight:700;margin-right:8px">النوع:</span>
+              <button class="filter-btn type-btn active" onclick="setTypeFilter('all',this)">الكل</button>
+              <button class="filter-btn type-btn" onclick="setTypeFilter('تقني',this)">💻 تقني</button>
+              <button class="filter-btn type-btn" onclick="setTypeFilter('خدمي',this)">🤝 خدمي</button>
+              <button class="filter-btn type-btn" onclick="setTypeFilter('منتج',this)">📦 منتج</button>
+              <button class="filter-btn type-btn" onclick="setTypeFilter('أسرة منتجة',this)">🏡 أسرة</button>
+              <span style="font-size:11px;color:var(--text-muted);font-weight:700;margin-right:8px">الالتزام:</span>
+              <button class="filter-btn commit-btn active" onclick="setCommitFilter('all',this)">الكل</button>
+              <button class="filter-btn commit-btn" onclick="setCommitFilter('sent',this)">✅ أرسل</button>
+              <button class="filter-btn commit-btn" onclick="setCommitFilter('late',this)">❌ لم يرسل</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>الشركة</th>
+                  <th>المرحلة / النوع</th>
+                  <th>مؤشر الصحة</th>
+                  <th>الخطر</th>
+                  <th>C1 تشغيلي</th>
+                  <th>C2 سوقي</th>
+                  <th>C3 مالي</th>
+                  <th>C4 التزام</th>
+                  <th>موعد المعلم</th>
+                  <th>آخر تحديث</th>
+                  <th>الإجراء</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr><td colspan="12" style="text-align:center;padding:24px;color:var(--text-muted)">جارٍ التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE PANEL -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- COMPLIANCE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📋 الالتزام الأسبوعي</div>
+            <span class="card-badge yellow" id="nonCompliantCount">—</span>
+          </div>
+          <div id="complianceList"></div>
+        </div>
+
+        <!-- QUICK STATS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 التوزيع حسب المرحلة</div>
+          </div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px" id="stageChart"></div>
+        </div>
+
+        <!-- ESCALATIONS -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⚡ تتطلب تصعيدًا فوريًا</div>
+          </div>
+          <div id="escalationList"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// MOCK DATA — يمثل بيانات حقيقية للديمو
+// ============================================
+const MOCK_STARTUPS = [
+  { id:"ST001", name:"نماء للتقنية",        stage:"MVP",   type:"تقني",        health:32, risk:"high",   escalation:true,  alert:true,  c1:40, c2:25, c3:30, c4:35, flags:["إيرادات صفر +4 أسابيع","Runway أقل من شهرين","لم يرسل تحديث أسبوعين"],      recommendation:"اجتماع مراجعة طارئ — النظر في إعادة الهيكلة", committed:false, lastUpdate:"منذ أسبوعين",   escalation_reason:"توقف تشغيلي + أزمة تمويل",  monthly_updated:false },
+  { id:"ST002", name:"سدرة للاستشارات",    stage:"فكرة", type:"خدمي",        health:55, risk:"medium", escalation:false, alert:true,  c1:60, c2:50, c3:55, c4:55, flags:["نسبة الإنجاز أقل من 50%","لا يوجد عملاء مؤكدون"],                        recommendation:"جلسة إرشاد لتحديد نموذج العمل",              committed:true,  lastUpdate:"منذ يومين",      escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST003", name:"رحلة للسياحة الذكية",stage:"نمو",  type:"منتج",        health:84, risk:"low",    escalation:false, alert:false, c1:85, c2:90, c3:80, c4:82, flags:[],                                                                           recommendation:"الاستمرار + دعم في التوسع الجغرافي",          committed:true,  lastUpdate:"أمس",            escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST004", name:"بذرة الأغذية",       stage:"MVP",  type:"أسرة منتجة", health:47, risk:"medium", escalation:false, alert:true,  c1:55, c2:40, c3:50, c4:45, flags:["معدل عودة العملاء منخفض (18%)","نسبة المصروف للإيراد 1.4"],              recommendation:"تحسين استراتيجية الاحتفاظ بالعملاء",         committed:true,  lastUpdate:"منذ 3 أيام",    escalation_reason:null,                          monthly_updated:false },
+  { id:"ST005", name:"مسار التعليمي",      stage:"فكرة", type:"تقني",        health:28, risk:"high",   escalation:true,  alert:true,  c1:30, c2:20, c3:35, c4:28, flags:["لم يرسل تحديث 3 أسابيع","لا يوجد MVP","لا تحقق من السوق"],               recommendation:"تصعيد — مراجعة مع لجنة الحاضنة",             committed:false, lastUpdate:"منذ 3 أسابيع",  escalation_reason:"غياب متكرر + لا تقدم",       monthly_updated:false },
+  { id:"ST006", name:"ضيافة للخدمات",      stage:"نمو",  type:"خدمي",        health:71, risk:"low",    escalation:false, alert:false, c1:75, c2:70, c3:68, c4:73, flags:[],                                                                           recommendation:"مواصلة + دعم في التوثيق للتمويل",            committed:true,  lastUpdate:"اليوم",          escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST007", name:"مزرعة الهيدروبونيك", stage:"MVP",  type:"أسرة منتجة", health:61, risk:"medium", escalation:false, alert:false, c1:65, c2:58, c3:60, c4:62, flags:["Runway 3 أشهر — يحتاج تمويل"],                                            recommendation:"ربط بمستثمرين — عرض في Demo Day",            committed:true,  lastUpdate:"أمس",            escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST008", name:"لوجيكس للشحن",       stage:"نمو",  type:"تقني",        health:78, risk:"low",    escalation:false, alert:false, c1:80, c2:85, c3:72, c4:76, flags:[],                                                                           recommendation:"دعم في Series A pitch",                       committed:true,  lastUpdate:"اليوم",          escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST009", name:"تكييف سمارت",        stage:"MVP",  type:"منتج",        health:43, risk:"medium", escalation:false, alert:true,  c1:50, c2:38, c3:44, c4:42, flags:["نمو الإيرادات متوقف منذ أسبوعين","معدل احتفاظ 22%"],                     recommendation:"تحليل سبب توقف النمو + مراجعة التسعير",      committed:true,  lastUpdate:"منذ 4 أيام",    escalation_reason:null,                          monthly_updated:false },
+  { id:"ST010", name:"سلة العضوية",        stage:"فكرة", type:"أسرة منتجة", health:38, risk:"high",   escalation:false, alert:true,  c1:42, c2:30, c3:40, c4:38, flags:["لم يُحدَّث التقرير الشهري","إيرادات صفر"],                               recommendation:"إعادة تحديد الجمهور المستهدف بدقة",          committed:false, lastUpdate:"منذ أسبوع",      escalation_reason:null,                          monthly_updated:false },
+  { id:"ST011", name:"ميدان الرياضة",      stage:"MVP",  type:"خدمي",        health:66, risk:"medium", escalation:false, alert:false, c1:68, c2:64, c3:62, c4:70, flags:["نسبة المصروف 1.1 — قريبة من الخطر"],                                     recommendation:"مراقبة التكاليف + تسريع الإيرادات",          committed:true,  lastUpdate:"أمس",            escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST012", name:"ديكور ذكي",          stage:"فكرة", type:"منتج",        health:52, risk:"medium", escalation:false, alert:false, c1:55, c2:48, c3:52, c4:53, flags:["لم يُثبَّت نموذج العمل بعد"],                                            recommendation:"جلسة تحقق من السوق مع المستشار",             committed:true,  lastUpdate:"منذ يومين",      escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST013", name:"نبتة الصحة",         stage:"نمو",  type:"أسرة منتجة", health:88, risk:"low",    escalation:false, alert:false, c1:90, c2:92, c3:85, c4:87, flags:[],                                                                           recommendation:"تسريع التوسع + دعم في Pitch للمستثمرين",     committed:true,  lastUpdate:"اليوم",          escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST014", name:"كودر للتطوير",       stage:"MVP",  type:"تقني",        health:59, risk:"medium", escalation:false, alert:false, c1:62, c2:55, c3:58, c4:60, flags:["Runway 4 أشهر — يحتاج متابعة"],                                           recommendation:"التخطيط للجولة التمويلية القادمة",           committed:true,  lastUpdate:"منذ 3 أيام",    escalation_reason:null,                          monthly_updated:true  },
+  { id:"ST015", name:"جسر اللوجستيك",      stage:"نمو",  type:"خدمي",        health:22, risk:"high",   escalation:true,  alert:true,  c1:25, c2:18, c3:22, c4:24, flags:["انخفاض حاد في الإيرادات 40%","Runway شهر واحد","لم يرسل تحديث"],         recommendation:"تصعيد فوري — وضع حرج يهدد الاستمرارية",      committed:false, lastUpdate:"منذ أسبوعين",   escalation_reason:"انهيار إيرادات + أزمة سيولة", monthly_updated:false },
+];
+
+let riskFilter='all', stageFilter='all', typeFilter='all', commitFilter='all';
+let allData = [...MOCK_STARTUPS];
+
+// ============================================
+// INIT
+// ============================================
+window.onload = async function() {
+  await loadData();
+  document.getElementById('loadingOverlay').style.display = 'none';
+  updateLastUpdateTime();
+};
+
+async function loadData() {
+  try {
+    const res = await fetch('/api/dashboard', { credentials: 'include' });
+    if (res.ok) {
+      const json = await res.json();
+      allData = json.startups || allData;
+    }
+  } catch(e) {
+    // Use mock data silently
+  }
+  renderAll();
+}
+
+function renderAll() {
+  renderKPIs();
+  renderAlerts();
+  renderTable(allData);
+  renderCompliance();
+  renderStageChart();
+  renderEscalations();
+}
+
+function renderKPIs() {
+  const total = allData.length;
+  const high = allData.filter(s => s.risk === 'high').length;
+  const med = allData.filter(s => s.risk === 'medium').length;
+  const low = allData.filter(s => s.risk === 'low').length;
+  const esc = allData.filter(s => s.escalation).length;
+  const committed = allData.filter(s => s.committed).length;
+  const commitPct = Math.round((committed/total)*100);
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-high').textContent = high;
+  document.getElementById('kpi-med').textContent = med;
+  document.getElementById('kpi-low').textContent = low;
+  document.getElementById('kpi-esc').textContent = esc;
+  document.getElementById('kpi-commit').textContent = commitPct + '%';
+  document.getElementById('alertCount').textContent = high + esc;
+  document.getElementById('nonCompliantCount').textContent = (total - committed) + ' لم ترسل';
+  if (high + esc > 0) document.getElementById('notifDot').style.display = 'block';
+}
+
+function renderAlerts() {
+  const alerts = allData.filter(s => s.alert || s.escalation)
+    .sort((a,b) => (b.escalation ? 1 : 0) - (a.escalation ? 1 : 0));
+
+  document.getElementById('alertBadge').textContent = alerts.length + ' تنبيه';
+
+  if (!alerts.length) {
+    document.getElementById('alertsList').innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">✅ لا توجد تنبيهات</div>`;
+    return;
+  }
+
+  document.getElementById('alertsList').innerHTML = alerts.slice(0,5).map(s => `
+    <div class="alert-item" onclick="openStartup('${s.id}')">
+      <div class="alert-icon ${s.escalation ? 'orange' : 'red'}">${s.escalation ? '⚡' : '🔴'}</div>
+      <div class="alert-info">
+        <div class="alert-name">${s.name}</div>
+        <div class="alert-reason">${s.flags.slice(0,2).join(' • ')}</div>
+        <div class="alert-meta">
+          ${s.escalation ? `<span class="badge badge-orange">تصعيد</span>` : `<span class="badge badge-red">تنبيه</span>`}
+          <span class="badge badge-gray">${s.stage}</span>
+          <span class="badge badge-gray">الصحة: ${s.health}</span>
+          ${!s.committed ? `<span class="badge badge-red">لم يرسل</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTable(data) {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = data;
+
+  if(riskFilter==='high') filtered=filtered.filter(s=>s.risk==='high');
+  else if(riskFilter==='medium') filtered=filtered.filter(s=>s.risk==='medium');
+  else if(riskFilter==='low') filtered=filtered.filter(s=>s.risk==='low');
+  else if(riskFilter==='escalation') filtered=filtered.filter(s=>s.escalation);
+  if(stageFilter!=='all') filtered=filtered.filter(s=>s.stage===stageFilter);
+  if(typeFilter!=='all') filtered=filtered.filter(s=>s.type===typeFilter);
+  if(commitFilter==='sent') filtered=filtered.filter(s=>s.committed);
+  else if(commitFilter==='late') filtered=filtered.filter(s=>!s.committed);
+
+  if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search) || s.id.toLowerCase().includes(search));
+
+  // Sort: escalation > high > medium > low
+  filtered.sort((a,b) => {
+    const score = s => (s.escalation ? 10 : 0) + (s.risk==='high'?3:s.risk==='medium'?2:1);
+    return score(b) - score(a);
+  });
+
+  if (!filtered.length) {
+    document.getElementById('tableBody').innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text-muted)">لا توجد نتائج مطابقة</td></tr>`;
+    return;
+  }
+
+  document.getElementById('tableBody').innerHTML = filtered.map(s => {
+    const riskBadge = s.risk === 'high' ? 'badge-red' : s.risk === 'medium' ? 'badge-yellow' : 'badge-green';
+    const riskLabel = s.risk === 'high' ? 'مرتفع' : s.risk === 'medium' ? 'متوسط' : 'منخفض';
+    const healthColor = s.health >= 70 ? '#22c55e' : s.health >= 45 ? '#f59e0b' : '#ef4444';
+    const cColor = v => v >= 70 ? 'var(--green)' : v >= 45 ? 'var(--yellow)' : 'var(--red)';
+    const displayName = (s.startup_name != null && s.startup_name !== '') ? s.startup_name : s.name;
+    const milestoneDate = s.next_milestone_due_date ? new Date(s.next_milestone_due_date).toLocaleDateString('ar-SA') : '—';
+    return `
+      <tr onclick="openStartup('${s.id}')">
+        <td>
+          <div class="company-info">
+            <div class="company-name">${displayName}</div>
+            <div class="company-id">${s.id}</div>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span class="badge badge-purple">${s.stage}</span>
+            <span style="font-size:11px;color:var(--text-muted)">${s.type}</span>
+          </div>
+        </td>
+        <td>
+          <div class="health-bar-wrap">
+            <span class="health-num" style="color:${healthColor}">${s.health}</span>
+            <div class="health-bar">
+              <div class="health-fill" style="width:${s.health}%;background:${healthColor}"></div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span class="badge ${riskBadge}">${riskLabel}</span>
+            ${s.escalation ? `<span class="badge badge-orange">⚡ تصعيد</span>` : ''}
+          </div>
+        </td>
+        <td><span class="c-score" style="color:${cColor(s.c1)}">${s.c1}</span></td>
+        <td><span class="c-score" style="color:${cColor(s.c2)}">${s.c2}</span></td>
+        <td><span class="c-score" style="color:${cColor(s.c3)}">${s.c3}</span></td>
+        <td><span class="c-score" style="color:${cColor(s.c4)}">${s.c4}</span></td>
+        <td style="font-size:12px;color:var(--text-muted)">${milestoneDate}</td>
+        <td>
+          <span class="commitment-chip ${s.committed ? 'commitment-sent' : 'commitment-late'}">
+            ${s.committed ? '✅ أرسل' : '❌ لم يرسل'}
+          </span>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${s.lastUpdate}</div>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted);max-width:160px;white-space:normal;line-height:1.4">${(s.recommendation||'').substring(0,50)}${(s.recommendation||'').length>50?'…':''}</td>
+        <td>
+          <button class="action-btn" onclick="event.stopPropagation();openStartup('${s.id}')">تفاصيل</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderCompliance() {
+  const items = allData.map(s => ({ name: s.name, committed: s.committed, weeks: Math.floor(Math.random()*4)+1 }));
+  const nonCommitted = items.filter(s => !s.committed);
+  document.getElementById('complianceList').innerHTML = nonCommitted.slice(0,5).map(s => `
+    <div class="compliance-item">
+      <div style="font-size:13px">❌</div>
+      <div style="flex:1">
+        <div class="compliance-name">${s.name}</div>
+        <div class="compliance-week">لم ترسل التحديث الأسبوعي</div>
+      </div>
+    </div>
+  `).join('') + items.filter(s=>s.committed).slice(0,3).map(s => `
+    <div class="compliance-item">
+      <div style="font-size:13px">✅</div>
+      <div style="flex:1">
+        <div class="compliance-name">${s.name}</div>
+        <div class="compliance-week">أرسلت هذا الأسبوع</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStageChart() {
+  const stages = ['فكرة','MVP','نمو'];
+  const counts = stages.map(st => allData.filter(s=>s.stage===st).length);
+  const total = allData.length;
+  const colors = ['#9C6599','#132154','#22c55e'];
+  document.getElementById('stageChart').innerHTML = stages.map((st,i) => `
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+        <span style="font-weight:600">${st}</span>
+        <span style="color:var(--text-muted)">${counts[i]} شركة</span>
+      </div>
+      <div style="height:6px;border-radius:100px;background:var(--border);overflow:hidden">
+        <div style="height:100%;width:${total>0?(counts[i]/total*100):0}%;background:${colors[i]};border-radius:100px;transition:width 0.8s"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderEscalations() {
+  const escs = allData.filter(s=>s.escalation);
+  document.getElementById('escalationList').innerHTML = escs.length ? escs.map(s=>`
+    <div class="compliance-item" style="cursor:pointer" onclick="openStartup('${s.id}')">
+      <div style="font-size:16px">⚡</div>
+      <div style="flex:1">
+        <div class="compliance-name">${s.name}</div>
+        <div class="compliance-week" style="color:var(--red)">${s.escalation_reason}</div>
+      </div>
+    </div>
+  `).join('') : `<div style="padding:16px 20px;color:var(--text-muted);font-size:13px">لا توجد تصعيدات حالية</div>`;
+}
+
+function setRiskFilter(v,btn){
+  riskFilter=v;
+  document.querySelectorAll('.risk-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTable(allData);
+}
+function setStageFilter(v,btn){
+  stageFilter=v;
+  document.querySelectorAll('.stage-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTable(allData);
+}
+function setTypeFilter(v,btn){
+  typeFilter=v;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTable(allData);
+}
+function setCommitFilter(v,btn){
+  commitFilter=v;
+  document.querySelectorAll('.commit-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTable(allData);
+}
+function setFilter(v,btn,type){
+  if(type==='risk') setRiskFilter(v,btn);
+}
+function filterTable(){renderTable(allData);}
+
+function openStartup(id) {
+  window.location.href = `admin-startup-details.html?id=${id}`;
+}
+
+async function refreshData() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  await loadData();
+  document.getElementById('loadingOverlay').style.display = 'none';
+  updateLastUpdateTime();
+  showToast('✅ تم تحديث البيانات');
+}
+
+function updateLastUpdateTime() {
+  const now = new Date();
+  document.getElementById('lastUpdate').textContent =
+    `آخر تحديث: ${now.toLocaleDateString('ar-SA')} — ${now.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'})}`;
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.dataset.theme === 'dark';
+  body.dataset.theme = isDark ? 'light' : 'dark';
+  document.querySelector('.icon-btn').textContent = isDark ? '🌙' : '☀️';
+}
+</script>
+</body>
+</html>

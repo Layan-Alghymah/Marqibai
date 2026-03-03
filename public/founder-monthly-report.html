@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التقرير الشهري — مرقب AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{--navy:#16173D;--navy2:#132154;--purple:#9C6599;--bg:#f0eef8;--card-bg:#ffffff;--text:#16173D;--text-muted:#6b6b8a;--border:rgba(22,23,61,0.1);--shadow:0 2px 12px rgba(22,23,61,0.07);--input-bg:#f8f7fc;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;}
+[data-theme="dark"]{--bg:#080918;--card-bg:#10112a;--text:#e8e8f0;--text-muted:#8080a8;--border:rgba(255,255,255,0.07);--input-bg:rgba(255,255,255,0.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:all 0.3s;}
+.topbar{background:var(--card-bg);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:0 1px 8px rgba(22,23,61,0.05);}
+.topbar img{height:36px;}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.nav-btn{padding:7px 16px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+.nav-btn:hover,.nav-btn.active{background:var(--navy2);color:white;border-color:var(--navy2);}
+.container{max-width:820px;margin:0 auto;padding:32px 20px;}
+.nav-tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--card-bg);padding:6px;border-radius:12px;border:1px solid var(--border);}
+.nav-tab{flex:1;padding:9px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.nav-tab.active{background:var(--navy2);color:white;}
+.page-header{margin-bottom:24px;}
+.month-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:100px;background:rgba(19,33,84,0.08);border:1px solid rgba(19,33,84,0.15);color:var(--navy2);font-size:12px;font-weight:700;margin-bottom:10px;}
+.page-title{font-size:24px;font-weight:900;margin-bottom:4px;}
+.page-sub{color:var(--text-muted);font-size:14px;}
+/* Last month banner */
+.last-month-banner{background:linear-gradient(135deg,rgba(19,33,84,0.06),rgba(156,101,153,0.06));border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.banner-kpi{text-align:center;}
+.banner-kpi-val{font-size:22px;font-weight:900;}
+.banner-kpi-label{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.sec-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.sec-icon.blue{background:rgba(19,33,84,0.08);}
+.sec-icon.green{background:rgba(34,197,94,0.1);}
+.sec-icon.purple{background:rgba(156,101,153,0.1);}
+.sec-icon.orange{background:rgba(249,115,22,0.1);}
+.sec-title{font-size:16px;font-weight:700;}
+.sec-sub{font-size:12px;color:var(--text-muted);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{margin-bottom:0;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.hint{font-size:11px;color:var(--text-muted);font-weight:400;}
+.form-input,.form-select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;transition:all 0.2s;outline:none;}
+.form-input:focus,.form-select:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(156,101,153,0.1);}
+.form-textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;transition:all 0.2s;outline:none;resize:vertical;min-height:80px;}
+.form-textarea:focus{border-color:var(--purple);}
+/* Growth indicator */
+.growth-indicator{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;font-weight:700;}
+/* Radio toggle */
+.toggle-group{display:flex;gap:8px;}
+.toggle-opt input{display:none;}
+.toggle-opt label{padding:9px 18px;border-radius:9px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;display:block;}
+.toggle-opt input:checked+label{border-color:var(--navy2);background:var(--navy2);color:white;}
+/* Channel tags */
+.channel-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.channel-tag{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--input-bg);cursor:pointer;font-family:'Cairo',sans-serif;font-size:13px;font-weight:600;transition:all 0.2s;color:var(--text);}
+.channel-tag.on{border-color:var(--purple);background:rgba(156,101,153,0.1);color:var(--purple);}
+/* Partnership rows */
+.partner-row{display:flex;gap:10px;margin-bottom:8px;}
+.partner-row input{flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--input-bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;}
+.partner-row input:focus{border-color:var(--purple);}
+.add-partner{padding:9px 14px;border-radius:8px;border:1.5px dashed var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;width:100%;transition:all 0.2s;}
+.add-partner:hover{border-color:var(--purple);color:var(--purple);}
+/* Submit */
+.submit-bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.btn-submit{flex:1;min-width:200px;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(156,101,153,0.3);}
+.btn-submit:hover{transform:translateY(-1px);}
+.btn-draft{padding:13px 24px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+/* Result */
+.result-box{display:none;background:linear-gradient(135deg,rgba(19,33,84,0.04),rgba(156,101,153,0.06));border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
+.result-box.show{display:block;animation:fadeIn 0.4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.res-kpi{text-align:center;padding:12px;background:var(--card-bg);border-radius:10px;border:1px solid var(--border);}
+.res-kpi-val{font-size:24px;font-weight:900;}
+.res-kpi-label{font-size:11px;color:var(--text-muted);margin-top:3px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body data-theme="light">
+<div class="topbar">
+  <a href="founder-home.html"><img id="topLogo" src="light_logo.png" alt="مرقب AI"></a>
+  <div class="topbar-right">
+    <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+    <a href="founder-home.html" class="nav-btn">🏠 لوحتي</a>
+    <a href="founder-weekly-update.html" class="nav-btn">📋 أسبوعي</a>
+    <a href="founder-startup-profile.html" class="nav-btn">📄 ملف المشروع</a>
+    <a href="founder-monthly-report.html" class="nav-btn active">📊 شهري</a>
+    <a href="founder-consultations.html" class="nav-btn">🤝 استشارات</a>
+    <a href="founder-history.html" class="nav-btn">🕐 السجل</a>
+    <a href="login.html" class="nav-btn">خروج</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="location.href='founder-home.html'">🏠 لوحتي</button>
+    <button class="nav-tab" onclick="location.href='founder-weekly-update.html'">📋 أسبوعي</button>
+    <button class="nav-tab" onclick="location.href='founder-startup-profile.html'">📄 ملف المشروع</button>
+    <button class="nav-tab active">📊 شهري</button>
+    <button class="nav-tab" onclick="location.href='founder-consultations.html'">🤝 استشارات</button>
+    <button class="nav-tab" onclick="location.href='founder-history.html'">🕐 السجل</button>
+  </div>
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="month-chip">📅 يناير ٢٠٢٥</div>
+    <div class="page-title">التقرير الشهري</div>
+    <div class="page-sub">شركة: <strong>سدرة للاستشارات</strong> — هذا التقرير يُحدَّث مرة شهريًا</div>
+  </div>
+
+  <!-- LAST MONTH SNAPSHOT -->
+  <div class="last-month-banner">
+    <div style="font-size:13px;font-weight:700;color:var(--text-muted)">ديسمبر ٢٠٢٤ — آخر تقرير</div>
+    <div class="banner-kpi"><div class="banner-kpi-val" style="color:var(--green)">15,000</div><div class="banner-kpi-label">إيراد (ر.س)</div></div>
+    <div class="banner-kpi"><div class="banner-kpi-val">8</div><div class="banner-kpi-label">عملاء جدد</div></div>
+    <div class="banner-kpi"><div class="banner-kpi-val" style="color:var(--yellow)">38%</div><div class="banner-kpi-label">معدل الاحتفاظ</div></div>
+    <div class="banner-kpi"><div class="banner-kpi-val" style="color:var(--green)">6</div><div class="banner-kpi-label">Runway (شهر)</div></div>
+    <div class="banner-kpi"><div class="banner-kpi-val">62</div><div class="banner-kpi-label">مؤشر الصحة</div></div>
+  </div>
+
+  <!-- RESULT BOX -->
+  <div class="result-box" id="resultBox">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px">📊 نتيجة التقييم الشهري</div>
+    <div class="result-grid" id="resultGrid"></div>
+    <div id="resultRec" style="padding:12px 16px;border-radius:10px;background:var(--card-bg);border:1px solid var(--border);font-size:14px;font-weight:600;margin-top:4px"></div>
+  </div>
+
+  <!-- 1. REVENUE -->
+  <div class="card">
+    <div class="section-head">
+      <div class="sec-icon green">💰</div>
+      <div><div class="sec-title">الإيرادات والنمو</div><div class="sec-sub">المؤشرات المالية هذا الشهر</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">الإيراد الشهري الحالي (ر.س)</label>
+        <input type="number" class="form-input" id="revCurrent" placeholder="مثال: 22000" oninput="calcGrowth()">
+        <div class="growth-indicator" id="growthInd"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">إيراد الشهر الماضي (ر.س)</label>
+        <input type="number" class="form-input" id="revPrev" placeholder="مثال: 15000" oninput="calcGrowth()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">إيراد متكرر شهري (MRR) <span class="hint">اختياري</span></label>
+        <input type="number" class="form-input" id="mrr" placeholder="مثال: 8000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">توقع الإيراد الشهر القادم <span class="hint">اختياري</span></label>
+        <input type="number" class="form-input" id="revForecast" placeholder="مثال: 28000">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. CUSTOMERS -->
+  <div class="card">
+    <div class="section-head">
+      <div class="sec-icon blue">👥</div>
+      <div><div class="sec-title">العملاء والاحتفاظ</div><div class="sec-sub">نمو القاعدة وولاء العملاء</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">إجمالي العملاء النشطين</label>
+        <input type="number" class="form-input" id="totalCustomers" placeholder="مثال: 45">
+      </div>
+      <div class="form-group">
+        <label class="form-label">عملاء جدد هذا الشهر</label>
+        <input type="number" class="form-input" id="newCustomers" placeholder="مثال: 12">
+      </div>
+      <div class="form-group">
+        <label class="form-label">معدل الاحتفاظ (%) <span class="hint">0–100</span></label>
+        <input type="number" class="form-input" id="retention" placeholder="مثال: 65" min="0" max="100">
+      </div>
+      <div class="form-group">
+        <label class="form-label">معدل التراجع Churn (%) <span class="hint">0–100</span></label>
+        <input type="number" class="form-input" id="churn" placeholder="مثال: 8" min="0" max="100">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">قنوات اكتساب العملاء الأساسية</label>
+        <div class="channel-grid">
+          <button class="channel-tag" onclick="this.classList.toggle('on')">🔍 بحث / SEO</button>
+          <button class="channel-tag" onclick="this.classList.toggle('on')">📱 سوشال ميديا</button>
+          <button class="channel-tag" onclick="this.classList.toggle('on')">🤝 إحالات</button>
+          <button class="channel-tag" onclick="this.classList.toggle('on')">📢 إعلانات مدفوعة</button>
+          <button class="channel-tag" onclick="this.classList.toggle('on')">🏛️ شراكات</button>
+          <button class="channel-tag" onclick="this.classList.toggle('on')">🎪 فعاليات</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. FINANCIAL HEALTH -->
+  <div class="card">
+    <div class="section-head">
+      <div class="sec-icon orange">📊</div>
+      <div><div class="sec-title">الوضع المالي</div><div class="sec-sub">السيولة والمصروفات والتمويل</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Runway المتبقية (أشهر)</label>
+        <input type="number" class="form-input" id="runway" placeholder="مثال: 8" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">نسبة المصروف للإيراد</label>
+        <input type="number" class="form-input" id="expRatio" placeholder="مثال: 0.85" min="0" step="0.05">
+      </div>
+      <div class="form-group">
+        <label class="form-label">إجمالي المصروفات الشهرية (ر.س)</label>
+        <input type="number" class="form-input" id="expenses" placeholder="مثال: 12000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الرصيد الحالي (ر.س) <span class="hint">اختياري</span></label>
+        <input type="number" class="form-input" id="cashBalance" placeholder="مثال: 95000">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">هل حصلتم على تمويل جديد هذا الشهر؟</label>
+        <div class="toggle-group">
+          <div class="toggle-opt"><input type="radio" name="funding" id="fundNo" value="no" checked><label for="fundNo">لا</label></div>
+          <div class="toggle-opt"><input type="radio" name="funding" id="fundYes" value="yes"><label for="fundYes">نعم</label></div>
+        </div>
+        <div id="fundingDetail" style="display:none;margin-top:10px">
+          <input type="text" class="form-input" id="fundingAmount" placeholder="مثال: 500,000 ر.س — مستثمر ملاك">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PRODUCT PROGRESS -->
+  <div class="card">
+    <div class="section-head">
+      <div class="sec-icon purple">🚀</div>
+      <div><div class="sec-title">تقدم المنتج / المبيعات</div><div class="sec-sub">إنجازات الشهر على مستوى المنتج</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">أبرز ميزة أو تطوير تم إطلاقه هذا الشهر</label>
+        <textarea class="form-textarea" id="productMilestone" placeholder="مثال: أطلقنا نسخة تجريبية من تطبيق الهاتف وحصلنا على 200 مستخدم أولي..."></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">الشراكات الجديدة هذا الشهر <span class="hint">اختياري</span></label>
+        <div id="partnersList">
+          <div class="partner-row">
+            <input type="text" placeholder="اسم الجهة / الشركة">
+            <input type="text" placeholder="نوع الشراكة" style="width:140px;flex:none">
+          </div>
+        </div>
+        <button class="add-partner" onclick="addPartnerRow()">+ إضافة شراكة</button>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">أبرز التحديات الشهرية</label>
+        <textarea class="form-textarea" id="challenges" placeholder="ما هي أكبر العقبات التي واجهتموها هذا الشهر؟"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">أهداف الشهر القادم</label>
+        <textarea class="form-textarea" id="nextMonthGoals" placeholder="ما الذي تخططون لتحقيقه الشهر القادم؟"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div class="card" style="padding:20px">
+    <div class="submit-bar">
+      <button class="btn-submit" onclick="submitReport()">إرسال التقرير الشهري ✓</button>
+      <button class="btn-draft" onclick="showToast('💾 تم حفظ المسودة')">حفظ مسودة</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#132154;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;transition:transform 0.3s;box-shadow:0 8px 24px rgba(19,33,84,0.4);font-family:Cairo,sans-serif"></div>
+
+<script>
+// Funding toggle
+document.querySelectorAll('input[name="funding"]').forEach(r=>{
+  r.addEventListener('change',()=>{
+    document.getElementById('fundingDetail').style.display = r.value==='yes'?'block':'none';
+  });
+});
+
+function calcGrowth(){
+  const cur=parseFloat(document.getElementById('revCurrent').value)||0;
+  const prv=parseFloat(document.getElementById('revPrev').value)||0;
+  const ind=document.getElementById('growthInd');
+  if(!cur||!prv){ind.innerHTML='';return;}
+  const pct=((cur-prv)/prv*100).toFixed(1);
+  const color=pct>=0?'var(--green)':'var(--red)';
+  const icon=pct>=0?'↑':'↓';
+  ind.innerHTML=`<span style="color:${color}">${icon} ${Math.abs(pct)}% مقارنة بالشهر الماضي</span>`;
+}
+
+function addPartnerRow(){
+  const div=document.createElement('div');
+  div.className='partner-row';
+  div.innerHTML=`<input type="text" placeholder="اسم الجهة / الشركة"><input type="text" placeholder="نوع الشراكة" style="width:140px;flex:none">`;
+  document.getElementById('partnersList').appendChild(div);
+}
+
+async function submitReport(){
+  const btn=document.querySelector('.btn-submit');
+  btn.disabled=true; btn.textContent='جارٍ الإرسال...';
+
+  const data={
+    revCurrent:parseFloat(document.getElementById('revCurrent').value)||0,
+    revPrev:parseFloat(document.getElementById('revPrev').value)||0,
+    retention:parseFloat(document.getElementById('retention').value)||0,
+    runway:parseFloat(document.getElementById('runway').value)||0,
+    expRatio:parseFloat(document.getElementById('expRatio').value)||0,
+    newCustomers:parseInt(document.getElementById('newCustomers').value)||0,
+  };
+
+  try{
+    const res=await fetch('/api/monthly-report',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(data)});
+    if(res.ok){const r=await res.json();showResult(r,data);btn.disabled=false;btn.textContent='إرسال التقرير الشهري ✓';return;}
+  }catch(e){}
+
+  await new Promise(r=>setTimeout(r,1200));
+  showResult(null,data);
+  btn.disabled=false; btn.textContent='إرسال التقرير الشهري ✓';
+}
+
+function showResult(api,data){
+  const growth=data.revPrev>0?((data.revCurrent-data.revPrev)/data.revPrev*100).toFixed(1):0;
+  const runwayColor=data.runway>=6?'var(--green)':data.runway>=3?'var(--yellow)':'var(--red)';
+  const retColor=data.retention>=60?'var(--green)':data.retention>=40?'var(--yellow)':'var(--red)';
+  const expColor=data.expRatio<=1?'var(--green)':data.expRatio<=1.5?'var(--yellow)':'var(--red)';
+  const growthColor=growth>=0?'var(--green)':'var(--red)';
+
+  document.getElementById('resultGrid').innerHTML=`
+    <div class="res-kpi"><div class="res-kpi-val" style="color:${growthColor}">${growth>=0?'+':''}${growth}%</div><div class="res-kpi-label">نمو الإيرادات</div></div>
+    <div class="res-kpi"><div class="res-kpi-val" style="color:${retColor}">${data.retention}%</div><div class="res-kpi-label">معدل الاحتفاظ</div></div>
+    <div class="res-kpi"><div class="res-kpi-val" style="color:${runwayColor}">${data.runway}</div><div class="res-kpi-label">Runway (شهر)</div></div>
+    <div class="res-kpi"><div class="res-kpi-val" style="color:${expColor}">${data.expRatio}</div><div class="res-kpi-label">نسبة المصروف</div></div>
+  `;
+  const issues=[];
+  if(growth<0) issues.push('تراجع في الإيرادات');
+  if(data.retention<40) issues.push('معدل احتفاظ منخفض');
+  if(data.runway<3) issues.push('Runway خطر');
+  if(data.expRatio>1.5) issues.push('نسبة مصروف مرتفعة');
+  const rec=issues.length===0?'✅ أداء شهري جيد — استمر في النمو':
+            issues.length<=2?`⚠️ نقاط تحتاج تحسين: ${issues.join('، ')}`:`🔴 وضع يستدعي مراجعة عاجلة: ${issues.join('، ')}`;
+  document.getElementById('resultRec').innerHTML=`<strong>توصية مرقب:</strong> ${rec}`;
+  const box=document.getElementById('resultBox');
+  box.classList.add('show');
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+  showToast('✅ تم إرسال التقرير الشهري');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>t.style.transform='translateX(-50%) translateY(80px)',3000);
+}
+function toggleTheme(){
+  const d=document.body.dataset.theme==='dark';
+  document.body.dataset.theme=d?'light':'dark';
+  document.querySelector('.icon-btn').textContent=d?'🌙':'☀️';
+  document.getElementById('topLogo').src=d?'light_logo.png':'dark_logo.png';
+}
+</script>
+</body>
+</html>

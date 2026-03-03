@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أكواد الدعوة — مرقب AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#16173D;--navy2:#132154;--purple:#9C6599;--bg:#f0eef8;--sidebar-bg:#16173D;--card-bg:#ffffff;--text:#16173D;--text-muted:#6b6b8a;--border:rgba(22,23,61,0.1);--shadow:0 2px 12px rgba(22,23,61,0.07);--input-bg:#f8f7fc;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--sidebar-w:240px;}
+[data-theme="dark"]{--bg:#080918;--card-bg:#10112a;--text:#e8e8f0;--text-muted:#8080a8;--border:rgba(255,255,255,0.07);--sidebar-bg:#060714;--input-bg:rgba(255,255,255,0.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;transition:all 0.3s;}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);position:fixed;top:0;right:0;bottom:0;z-index:50;display:flex;flex-direction:column;}
+.sidebar-header{padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.sidebar-logo{width:130px;}
+.sidebar-nav{flex:1;padding:20px 12px;display:flex;flex-direction:column;gap:4px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all 0.2s;color:rgba(255,255,255,0.65);font-size:14px;font-weight:500;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.08);color:white;}
+.nav-item.active{background:rgba(156,101,153,0.2);color:white;}
+.sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.06);}
+/* MAIN */
+.main{margin-right:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:64px;background:var(--card-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:40;}
+.topbar-title{font-size:17px;font-weight:700;}
+.topbar-actions{display:flex;gap:10px;align-items:center;}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.page{padding:28px;flex:1;}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card-bg);border-radius:18px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-size:18px;font-weight:800;}
+.modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:13px;font-weight:600;margin-bottom:8px;display:block;}
+.form-input,.form-select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--input-bg);color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;transition:all 0.2s;outline:none;}
+.form-input:focus,.form-select:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(156,101,153,0.1);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-submit-modal{flex:1;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.btn-cancel{padding:12px 20px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:14px;cursor:pointer;}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);padding:16px 18px;box-shadow:var(--shadow);}
+.stat-val{font-size:26px;font-weight:900;margin-bottom:4px;}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;}
+/* TABLE CARD */
+.card{background:var(--card-bg);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.btn-new{padding:9px 18px;border-radius:9px;border:none;background:linear-gradient(135deg,#132154,#9C6599);color:white;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 3px 10px rgba(156,101,153,0.3);}
+.btn-new:hover{transform:translateY(-1px);}
+/* INVITE TABLE */
+table{width:100%;border-collapse:collapse;}
+thead th{padding:12px 16px;text-align:right;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;}
+tbody tr:hover{background:rgba(156,101,153,0.03);}
+tbody tr:last-child{border-bottom:none;}
+td{padding:14px 16px;font-size:13px;vertical-align:middle;}
+/* CODE DISPLAY */
+.code-box{display:flex;align-items:center;gap:8px;}
+.code-text{font-family:monospace;font-size:15px;font-weight:800;letter-spacing:2px;color:var(--navy2);background:rgba(19,33,84,0.06);padding:5px 12px;border-radius:7px;cursor:pointer;transition:all 0.2s;}
+[data-theme="dark"] .code-text{color:var(--purple-light,#c49bc2);background:rgba(156,101,153,0.1);}
+.code-text:hover{background:rgba(19,33,84,0.12);}
+.copy-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.copy-btn:hover{background:var(--navy2);color:white;border-color:var(--navy2);}
+/* BADGES */
+.badge{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;}
+.b-active{background:rgba(34,197,94,0.1);color:var(--green);}
+.b-expired{background:rgba(100,100,120,0.1);color:var(--text-muted);}
+.b-used{background:rgba(245,158,11,0.1);color:var(--yellow);}
+.b-full{background:rgba(239,68,68,0.1);color:var(--red);}
+/* PROGRESS BAR */
+.usage-bar{display:flex;align-items:center;gap:8px;}
+.ubar{width:60px;height:5px;border-radius:100px;background:var(--border);overflow:hidden;}
+.ufill{height:100%;border-radius:100px;background:linear-gradient(90deg,#132154,#9C6599);}
+/* ACTION BTNS */
+.tbl-btn{padding:5px 12px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Cairo',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.tbl-btn:hover{border-color:var(--navy2);color:var(--navy2);}
+.tbl-btn.del:hover{border-color:var(--red);color:var(--red);}
+/* SHARE OVERLAY */
+.share-box{background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.share-box.show{display:flex;}
+.share-link{font-family:monospace;font-size:13px;color:var(--navy2);word-break:break-all;}
+.share-copy{padding:7px 14px;border-radius:8px;border:none;background:var(--green);color:white;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+@media(max-width:900px){.sidebar{width:60px}.main{margin-right:60px}.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">إنشاء كود دعوة جديد</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">وصف الدعوة <span style="font-size:11px;color:var(--text-muted)">(اختياري)</span></label>
+      <input type="text" class="form-input" id="invLabel" placeholder="مثال: دفعة يناير 2025">
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">المرحلة الافتراضية</label>
+        <select class="form-select" id="invStage">
+          <option value="">— غير محدد —</option>
+          <option>فكرة</option>
+          <option>MVP</option>
+          <option>نمو</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">النوع الافتراضي</label>
+        <select class="form-select" id="invType">
+          <option value="">— غير محدد —</option>
+          <option>تقني</option>
+          <option>خدمي</option>
+          <option>منتج</option>
+          <option>أسرة منتجة</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">صلاحية الكود</label>
+        <select class="form-select" id="invExpiry">
+          <option value="7">أسبوع واحد</option>
+          <option value="14">أسبوعان</option>
+          <option value="30" selected>شهر</option>
+          <option value="90">3 أشهر</option>
+          <option value="0">غير محدود</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">عدد مرات الاستخدام</label>
+        <select class="form-select" id="invUses">
+          <option value="1">مرة واحدة</option>
+          <option value="5">5 مرات</option>
+          <option value="10" selected>10 مرات</option>
+          <option value="25">25 مرة</option>
+          <option value="0">غير محدود</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-submit-modal" onclick="createInvite()">إنشاء الكود</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header"><img src="dark_logo.png" class="sidebar-logo" alt="مرقب"></div>
+  <nav class="sidebar-nav">
+    <a href="admin-dashboard.html" class="nav-item"><span>📊</span><span>لوحة المتابعة</span></a>
+    <a href="admin-startup-details.html" class="nav-item"><span>🏢</span><span>الشركات</span></a>
+    <a href="admin-invites.html" class="nav-item active"><span>🔗</span><span>أكواد الدعوة</span></a>
+    <a href="#" class="nav-item"><span>🤝</span><span>الاستشارات</span></a>
+    <a href="#" class="nav-item"><span>📈</span><span>التقارير</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="login.html" class="nav-item" onclick="return confirm('هل تريد الخروج؟')"><span>🚪</span><span>خروج</span></a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">إدارة أكواد الدعوة</div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="toggleTheme()">🌙</button>
+      <button class="btn-new" onclick="openModal()">+ إنشاء كود جديد</button>
+    </div>
+  </header>
+
+  <div class="page">
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <!-- SHARE BOX -->
+    <div class="share-box" id="shareBox">
+      <div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">🔗 رابط الدعوة جاهز</div>
+        <div class="share-link" id="shareLink"></div>
+      </div>
+      <button class="share-copy" onclick="copyShareLink()">نسخ الرابط</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔑 قائمة أكواد الدعوة</div>
+        <span style="font-size:12px;color:var(--text-muted)" id="tableCount"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>الكود</th>
+              <th>الوصف / الدفعة</th>
+              <th>المرحلة</th>
+              <th>النوع</th>
+              <th>الاستخدام</th>
+              <th>تاريخ الإنشاء</th>
+              <th>الصلاحية</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#132154;color:white;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;transition:transform 0.3s;box-shadow:0 8px 24px rgba(19,33,84,0.4);font-family:Cairo,sans-serif"></div>
+
+<script>
+let invites = [
+  {id:1, code:'MURQ-2025-A1', label:'دفعة يناير 2025 — الرئيسية', stage:'', type:'', expiry:'2025-02-28', maxUses:10, usedCount:7, createdAt:'١ يناير ٢٠٢٥', active:true},
+  {id:2, code:'INC-TECH-B2',  label:'مسار تقني — ربيع ٢٠٢٥',    stage:'MVP', type:'تقني', expiry:'2025-04-01', maxUses:5, usedCount:3, createdAt:'١٥ يناير ٢٠٢٥', active:true},
+  {id:3, code:'FOOD-2025-C3', label:'مسرّع الأغذية',             stage:'فكرة', type:'أسرة منتجة', expiry:'2025-03-15', maxUses:5, usedCount:2, createdAt:'١٠ يناير ٢٠٢٥', active:true},
+  {id:4, code:'OLD-BATCH-D4', label:'دفعة أكتوبر 2024',          stage:'', type:'', expiry:'2024-12-31', maxUses:10, usedCount:10, createdAt:'١ أكتوبر ٢٠٢٤', active:false},
+  {id:5, code:'SERV-2025-E5', label:'مسار الخدمات',              stage:'نمو', type:'خدمي', expiry:'2025-05-01', maxUses:0, usedCount:4, createdAt:'٢٠ يناير ٢٠٢٥', active:true},
+];
+let nextId=6;
+let currentShareLink='';
+
+function genCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const seg=n=>[...Array(n)].map(()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  return `MURQ-${seg(4)}-${seg(3)}`;
+}
+
+function getStatus(inv){
+  if(!inv.active) return {label:'موقوف',cls:'b-expired'};
+  if(inv.expiry){
+    const exp=new Date(inv.expiry);
+    if(exp<new Date()) return {label:'منتهي',cls:'b-expired'};
+  }
+  if(inv.maxUses>0 && inv.usedCount>=inv.maxUses) return {label:'مكتمل',cls:'b-full'};
+  return {label:'نشط',cls:'b-active'};
+}
+
+function renderStats(){
+  const total=invites.length;
+  const active=invites.filter(i=>getStatus(i).label==='نشط').length;
+  const totalUses=invites.reduce((s,i)=>s+i.usedCount,0);
+  const expired=invites.filter(i=>['منتهي','موقوف','مكتمل'].includes(getStatus(i).label)).length;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-label">إجمالي الأكواد</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--green)">${active}</div><div class="stat-label">نشطة</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--purple)">${totalUses}</div><div class="stat-label">مرات الاستخدام</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--text-muted)">${expired}</div><div class="stat-label">منتهية / موقوفة</div></div>
+  `;
+}
+
+function renderTable(){
+  document.getElementById('tableCount').textContent=`${invites.length} كود`;
+  document.getElementById('tableBody').innerHTML=invites.map(inv=>{
+    const st=getStatus(inv);
+    const usePct=inv.maxUses>0?(inv.usedCount/inv.maxUses*100):0;
+    const useLabel=inv.maxUses>0?`${inv.usedCount}/${inv.maxUses}`:`${inv.usedCount} / ∞`;
+    return `
+      <tr>
+        <td>
+          <div class="code-box">
+            <span class="code-text" onclick="copyCode('${inv.code}')" title="انقر للنسخ">${inv.code}</span>
+            <button class="copy-btn" onclick="copyCode('${inv.code}')" title="نسخ">📋</button>
+          </div>
+        </td>
+        <td style="font-size:13px;max-width:180px">${inv.label||'—'}</td>
+        <td>${inv.stage?`<span style="font-size:12px;font-weight:600">${inv.stage}</span>`:'<span style="color:var(--text-muted);font-size:12px">أي مرحلة</span>'}</td>
+        <td>${inv.type?`<span style="font-size:12px;font-weight:600">${inv.type}</span>`:'<span style="color:var(--text-muted);font-size:12px">أي نوع</span>'}</td>
+        <td>
+          <div class="usage-bar">
+            <span style="font-size:12px;font-weight:700">${useLabel}</span>
+            ${inv.maxUses>0?`<div class="ubar"><div class="ufill" style="width:${Math.min(100,usePct)}%"></div></div>`:''}
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted)">${inv.createdAt}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${inv.expiry?new Date(inv.expiry).toLocaleDateString('ar-SA'):'∞'}</td>
+        <td><span class="badge ${st.cls}">${st.label}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="tbl-btn" onclick="shareInvite('${inv.code}')">🔗 مشاركة</button>
+            ${inv.active?`<button class="tbl-btn del" onclick="toggleActive(${inv.id})">إيقاف</button>`:`<button class="tbl-btn" onclick="toggleActive(${inv.id})">تفعيل</button>`}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function openModal(){document.getElementById('modalOverlay').classList.add('open');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+function createInvite(){
+  const days=parseInt(document.getElementById('invExpiry').value);
+  const uses=parseInt(document.getElementById('invUses').value);
+  const expiry=days>0?new Date(Date.now()+days*86400000).toISOString().split('T')[0]:null;
+  const inv={
+    id:nextId++, code:genCode(),
+    label:document.getElementById('invLabel').value||`دفعة ${new Date().toLocaleDateString('ar-SA')}`,
+    stage:document.getElementById('invStage').value,
+    type:document.getElementById('invType').value,
+    expiry, maxUses:uses, usedCount:0,
+    createdAt:new Date().toLocaleDateString('ar-SA'), active:true
+  };
+  invites.unshift(inv);
+  closeModal();
+  renderStats(); renderTable();
+  shareInvite(inv.code);
+  showToast(`✅ تم إنشاء الكود: ${inv.code}`);
+
+  document.getElementById('invLabel').value='';
+  document.getElementById('invStage').value='';
+  document.getElementById('invType').value='';
+}
+
+function shareInvite(code){
+  const link=`${window.location.origin}/signup.html?invite=${code}`;
+  currentShareLink=link;
+  document.getElementById('shareLink').textContent=link;
+  document.getElementById('shareBox').classList.add('show');
+  document.getElementById('shareBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function copyShareLink(){
+  navigator.clipboard.writeText(currentShareLink).then(()=>showToast('✅ تم نسخ الرابط'));
+}
+
+function copyCode(code){
+  navigator.clipboard.writeText(code).then(()=>showToast(`📋 تم نسخ الكود: ${code}`));
+}
+
+function toggleActive(id){
+  const inv=invites.find(i=>i.id===id);
+  if(inv){inv.active=!inv.active;renderStats();renderTable();showToast(inv.active?'✅ تم تفعيل الكود':'تم إيقاف الكود');}
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>t.style.transform='translateX(-50%) translateY(80px)',3000);
+}
+function toggleTheme(){
+  const d=document.body.dataset.theme==='dark';
+  document.body.dataset.theme=d?'light':'dark';
+  document.querySelector('.icon-btn').textContent=d?'🌙':'☀️';
+}
+
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))closeModal();});
+
+renderStats();
+renderTable();
+</script>
+</body>
+</html>
